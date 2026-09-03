@@ -16,3 +16,5 @@ Phase 3 — Vertical Slice #1 (Auth → Course → Schedule → Dashboard)
 1. Clone repository ini.
 2. Jalankan `npm install`.
 3. Buat file `.env.local` di root project dengan isi:
+
+Setup repository berhasil dihubungkan ke Antigravity.
