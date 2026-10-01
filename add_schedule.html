@@ -1,0 +1,212 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+<title>Tambah Jadwal - Student Command Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700&amp;family=Inter:wght@400;500&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "accent-mint": "#DFEDED",
+                        "on-secondary": "#ffffff",
+                        "error-container": "#ffdad6",
+                        "inverse-surface": "#303030",
+                        "surface-tint": "#5e5e5e",
+                        "inverse-primary": "#c6c6c6",
+                        "secondary-fixed-dim": "#d2c6a7",
+                        "on-tertiary-container": "#848484",
+                        "on-secondary-fixed-variant": "#4e462f",
+                        "on-secondary-container": "#6d644b",
+                        "status-attention-fg": "#6F695A",
+                        "status-upcoming-fg": "#646A6A",
+                        "on-surface": "#1b1b1b",
+                        "bg-accent": "#F7EACA",
+                        "on-secondary-fixed": "#211b08",
+                        "on-tertiary": "#ffffff",
+                        "surface-container": "#eeeeee",
+                        "outline-variant": "#cfc4c5",
+                        "secondary-fixed": "#eee2c2",
+                        "on-primary-fixed-variant": "#474747",
+                        "primary": "#000000",
+                        "accent-sage": "#E0EEDD",
+                        "on-primary": "#ffffff",
+                        "surface-container-low": "#f3f3f3",
+                        "tertiary-fixed-dim": "#c6c6c6",
+                        "tertiary-fixed": "#e2e2e2",
+                        "error": "#ba1a1a",
+                        "tertiary-container": "#1b1b1b",
+                        "status-safe-fg": "#646B63",
+                        "on-surface-variant": "#4c4546",
+                        "on-tertiary-fixed": "#1b1b1b",
+                        "on-primary-container": "#848484",
+                        "status-overdue-bg": "#EDEDED",
+                        "on-background": "#1b1b1b",
+                        "tertiary": "#000000",
+                        "surface-bright": "#f9f9f9",
+                        "ink-on-dark": "#141414",
+                        "secondary-container": "#eee2c2",
+                        "on-tertiary-fixed-variant": "#474747",
+                        "surface-container-lowest": "#ffffff",
+                        "background": "#f9f9f9",
+                        "surface-dim": "#dadada",
+                        "on-error": "#ffffff",
+                        "status-urgent-bg": "#EED4BA",
+                        "on-primary-fixed": "#1b1b1b",
+                        "surface-container-high": "#e8e8e8",
+                        "outline": "#7e7576",
+                        "primary-fixed-dim": "#c6c6c6",
+                        "on-error-container": "#93000a",
+                        "muted-divider": "#D9D9D9",
+                        "surface-container-highest": "#e2e2e2",
+                        "primary-container": "#1b1b1b",
+                        "secondary": "#665e45",
+                        "status-urgent-fg": "#C17F6B",
+                        "inverse-on-surface": "#f1f1f1",
+                        "surface": "#f9f9f9",
+                        "accent-sand-track": "#D9C8AA",
+                        "primary-fixed": "#e2e2e2",
+                        "surface-variant": "#e2e2e2"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sm": "8px",
+                        "base": "16px",
+                        "md": "12px",
+                        "lg": "24px",
+                        "xl": "32px",
+                        "xs": "4px"
+                    },
+                    "fontFamily": {
+                        "display-numeric": ["Plus Jakarta Sans"],
+                        "label-medium": ["Inter"],
+                        "metadata": ["Inter"],
+                        "body": ["Inter"],
+                        "h1": ["Plus Jakarta Sans"],
+                        "h1-mobile": ["Plus Jakarta Sans"],
+                        "h2": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "display-numeric": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "label-medium": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "metadata": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "body": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "h1": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "h1-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "700" }],
+                        "h2": ["18px", { "lineHeight": "24px", "fontWeight": "600" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { -webkit-tap-highlight-color: transparent; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .material-symbols-outlined.fill { font-variation-settings: 'FILL' 1; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-container-lowest text-on-surface font-body antialiased min-h-screen flex flex-col relative pb-safe">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-surface-container-lowest flex items-center justify-between h-16 px-lg max-w-7xl mx-auto flat no shadows">
+<button aria-label="Go back" class="flex items-center justify-center w-10 h-10 -ml-2 text-primary hover:opacity-80 transition-opacity duration-200 rounded-full active:bg-surface-container-low">
+<span class="material-symbols-outlined text-[24px]">arrow_back</span>
+</button>
+<h1 class="font-h1-mobile text-h1-mobile text-primary font-bold flex-1 text-center">Tambah Jadwal</h1>
+
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 w-full max-w-xl mx-auto pt-24 px-lg pb-32 flex flex-col gap-xl">
+<!-- Contextual Card -->
+<section class="bg-surface-container-low rounded-[24px] p-base flex gap-md items-start">
+<div class="w-12 h-12 rounded-lg bg-ink-on-dark flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-primary fill">event_repeat</span>
+</div>
+<div class="flex flex-col gap-xs">
+<span class="font-label-medium text-label-medium text-on-surface">Jadwal kuliah berulang</span>
+<p class="font-metadata text-metadata text-on-surface-variant">Atur hari dan jam kelas untuk mengaktifkan jadwal serta pengingat absensi</p>
+</div>
+</section>
+<!-- Form Container -->
+<form class="flex flex-col gap-lg w-full">
+<!-- Mata Kuliah Field -->
+<div class="flex flex-col gap-sm">
+<label class="font-label-medium text-label-medium text-on-surface-variant pl-1">Mata kuliah</label>
+<div class="relative flex items-center w-full min-h-[64px] border border-muted-divider rounded-[16px] bg-surface-container-lowest px-md hover:border-outline transition-colors"><input type="text" class="w-full bg-transparent border-0 focus:ring-0 p-0 font-body text-body text-on-surface focus:outline-none" value="Pemrograman Web" placeholder="Contoh: Pemrograman Web"></div>
+</div><div class="flex flex-col gap-sm">
+<label class="font-label-medium text-label-medium text-on-surface-variant pl-1">Ruangan</label>
+<div class="relative flex items-center w-full min-h-[64px] border border-muted-divider rounded-[16px] bg-surface-container-lowest p-md hover:border-outline transition-colors cursor-pointer active:bg-surface-container-low">
+<div class="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0 mr-md">
+<span class="material-symbols-outlined text-on-surface-variant">location_on</span>
+</div>
+<span class="font-body text-body text-on-surface flex-1">Lab 2</span>
+</div>
+</div>
+<!-- Hari Selection -->
+<div class="flex flex-col gap-sm">
+<label class="font-label-medium text-label-medium text-on-surface-variant pl-1">Hari</label>
+<div class="flex items-center gap-sm overflow-x-auto hide-scrollbar pb-1">
+<button class="shrink-0 w-12 h-12 rounded-full border border-muted-divider bg-surface-container-lowest text-on-surface-variant font-label-medium text-label-medium hover:bg-surface-container-low transition-colors" type="button">Sen</button>
+<button class="shrink-0 w-12 h-12 rounded-full bg-ink-on-dark text-on-primary font-label-medium text-label-medium shadow-sm transition-transform active:scale-95" type="button">Sel</button>
+<button class="shrink-0 w-12 h-12 rounded-full border border-muted-divider bg-surface-container-lowest text-on-surface-variant font-label-medium text-label-medium hover:bg-surface-container-low transition-colors" type="button">Rab</button>
+<button class="shrink-0 w-12 h-12 rounded-full border border-muted-divider bg-surface-container-lowest text-on-surface-variant font-label-medium text-label-medium hover:bg-surface-container-low transition-colors" type="button">Kam</button>
+<button class="shrink-0 w-12 h-12 rounded-full border border-muted-divider bg-surface-container-lowest text-on-surface-variant font-label-medium text-label-medium hover:bg-surface-container-low transition-colors" type="button">Jum</button>
+<button class="shrink-0 w-12 h-12 rounded-full border border-muted-divider bg-surface-container-lowest text-on-surface-variant font-label-medium text-label-medium hover:bg-surface-container-low transition-colors" type="button">Sab</button>
+<button class="shrink-0 w-12 h-12 rounded-full border border-muted-divider bg-surface-container-lowest text-on-surface-variant font-label-medium text-label-medium hover:bg-surface-container-low transition-colors" type="button">Min</button>
+</div>
+</div>
+<!-- Time Fields Row -->
+<div class="flex items-center gap-md w-full">
+<div class="flex flex-col gap-sm flex-1">
+<label class="font-label-medium text-label-medium text-on-surface-variant pl-1">Jam mulai</label>
+<div class="relative flex items-center w-full h-[56px] border border-muted-divider rounded-[16px] bg-surface-container-lowest px-md hover:border-outline transition-colors">
+<span class="font-body text-body text-on-surface flex-1">10.00</span>
+<span class="material-symbols-outlined text-on-surface-variant">schedule</span>
+</div>
+</div>
+<div class="flex flex-col gap-sm flex-1">
+<label class="font-label-medium text-label-medium text-on-surface-variant pl-1">Jam selesai</label>
+<div class="relative flex items-center w-full h-[56px] border border-muted-divider rounded-[16px] bg-surface-container-lowest px-md hover:border-outline transition-colors">
+<span class="font-body text-body text-on-surface flex-1">11.40</span>
+<span class="material-symbols-outlined text-on-surface-variant">schedule</span>
+</div>
+</div>
+</div>
+<!-- Helper Text -->
+<div class="flex items-start gap-sm mt-2">
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant mt-0.5">notifications_active</span>
+<p class="font-metadata text-metadata text-on-surface-variant leading-relaxed">Pengingat absensi dikirim 15 menit sebelum dan saat kelas dimulai.</p>
+</div>
+</form>
+</main>
+<!-- Bottom Fixed Actions -->
+<div class="fixed bottom-0 left-0 w-full bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest to-transparent pt-lg pb-lg px-lg z-40">
+<div class="max-w-xl mx-auto flex flex-col gap-sm items-center">
+<button class="w-full h-14 bg-ink-on-dark text-on-primary rounded-full font-h2 text-h2 shadow-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center">
+                SIMPAN JADWAL
+            </button>
+<p class="font-metadata text-metadata text-on-surface-variant text-center opacity-80">Waktu jadwal mengikuti zona waktu Asia/Jakarta.</p>
+</div>
+</div>
+
+
+
+
+
+
+</body></html>

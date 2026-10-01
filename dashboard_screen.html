@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Student Command Center</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "secondary-fixed": "#eee2c2",
+                        "on-secondary-container": "#6d644b",
+                        "tertiary": "#000000",
+                        "surface-container-high": "#e8e8e8",
+                        "status-upcoming-fg": "#646A6A",
+                        "accent-mint": "#DFEDED",
+                        "surface-dim": "#dadada",
+                        "surface-container-highest": "#e2e2e2",
+                        "on-primary": "#ffffff",
+                        "outline": "#7e7576",
+                        "inverse-surface": "#303030",
+                        "surface": "#f9f9f9",
+                        "primary-container": "#1b1b1b",
+                        "inverse-primary": "#c6c6c6",
+                        "error": "#ba1a1a",
+                        "primary": "#000000",
+                        "on-surface": "#1b1b1b",
+                        "on-tertiary-container": "#848484",
+                        "muted-divider": "#D9D9D9",
+                        "outline-variant": "#cfc4c5",
+                        "surface-container-lowest": "#ffffff",
+                        "status-urgent-fg": "#C17F6B",
+                        "primary-fixed-dim": "#c6c6c6",
+                        "tertiary-container": "#1b1b1b",
+                        "on-primary-container": "#848484",
+                        "secondary": "#665e45",
+                        "ink-on-dark": "#141414",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#474747",
+                        "status-safe-fg": "#646B63",
+                        "status-attention-fg": "#6F695A",
+                        "tertiary-fixed": "#e2e2e2",
+                        "secondary-fixed-dim": "#d2c6a7",
+                        "secondary-container": "#eee2c2",
+                        "primary-fixed": "#e2e2e2",
+                        "surface-tint": "#5e5e5e",
+                        "on-background": "#1b1b1b",
+                        "surface-container": "#eeeeee",
+                        "on-error-container": "#93000a",
+                        "status-overdue-bg": "#EDEDED",
+                        "status-urgent-bg": "#EED4BA",
+                        "on-primary-fixed-variant": "#474747",
+                        "on-primary-fixed": "#1b1b1b",
+                        "accent-sand-track": "#D9C8AA",
+                        "surface-container-low": "#f3f3f3",
+                        "bg-accent": "#F7EACA",
+                        "on-tertiary": "#ffffff",
+                        "accent-sage": "#E0EEDD",
+                        "on-tertiary-fixed": "#1b1b1b",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "background": "#f9f9f9",
+                        "surface-bright": "#f9f9f9",
+                        "inverse-on-surface": "#f1f1f1",
+                        "on-secondary-fixed": "#211b08",
+                        "on-surface-variant": "#4c4546",
+                        "tertiary-fixed-dim": "#c6c6c6",
+                        "surface-variant": "#e2e2e2",
+                        "on-secondary-fixed-variant": "#4e462f"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "12px",
+                        "xs": "4px",
+                        "lg": "24px",
+                        "base": "16px",
+                        "sm": "8px",
+                        "xl": "32px"
+                    },
+                    "fontFamily": {
+                        "h1": ["Plus Jakarta Sans"],
+                        "metadata": ["Inter"],
+                        "display-numeric": ["Plus Jakarta Sans"],
+                        "label-medium": ["Inter"],
+                        "body": ["Inter"],
+                        "h2": ["Plus Jakarta Sans"],
+                        "h1-mobile": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "h1": ["24px", { "lineHeight": "32px", "fontWeight": "700" }],
+                        "metadata": ["12px", { "lineHeight": "16px", "fontWeight": "500" }],
+                        "display-numeric": ["32px", { "lineHeight": "40px", "fontWeight": "700" }],
+                        "label-medium": ["14px", { "lineHeight": "20px", "fontWeight": "500" }],
+                        "body": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "h2": ["18px", { "lineHeight": "24px", "fontWeight": "600" }],
+                        "h1-mobile": ["20px", { "lineHeight": "28px", "fontWeight": "700" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .custom-radius-24 { border-radius: 24px; }
+        .custom-radius-16 { border-radius: 16px; }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-[#FFFFFF] text-primary font-body antialiased min-h-screen pb-24 md:pb-0">
+<!-- Top Navigation (Web) / Header (Mobile) -->
+<header class="w-full top-0 sticky bg-[#FFFFFF] z-40 hidden md:flex">
+<div class="flex justify-between items-center px-lg py-md w-full max-w-md mx-auto bg-[#FFFFFF]">
+<div class="flex items-center gap-sm">
+<img class="w-10 h-10 rounded-full object-cover" data-alt="A small, professional avatar picture of a young male student named Wahid, wearing a plain t-shirt against a light neutral background, clean minimalist style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlrsMD6Ht47Ll7yW834wy5i9IlHAxLxhltf60dTqXbi7Hn251A2gUMRwyqR_eJNUIAFuCOqIOCkwUv0sgShohi73tXjLhxDBlXOdXTZLO7PKmvYZTxee6jtW37RwpFTzcbvX51UHMdyGUNQRoCJG4EqBlnr0yxpe-gjgq_XG3j_HyjwgTPKIFtQ8qVwtS6fxghH2uusT12mthfD5JfEyuI4ZyacLkDjEu7fzIEFzlAIs_ceg2Hd-Es"/>
+<span class="font-h1-mobile text-h1-mobile text-primary font-bold">Halo, Wahid</span>
+</div>
+<button aria-label="Settings" class="text-primary hover:opacity-80 transition-opacity active:scale-95 transition-transform">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</header>
+<main class="w-full max-w-md mx-auto px-lg pt-lg md:pt-0">
+<!-- Mobile Header -->
+<div class="md:hidden flex justify-between items-start mb-xl">
+<div>
+<p class="font-metadata text-metadata text-on-surface-variant mb-1">Selasa, 1 September</p>
+<h1 class="font-h1-mobile text-h1-mobile text-primary font-bold">Halo, Wahid</h1>
+</div>
+<button aria-label="Settings" class="p-2 border border-muted-divider rounded-full text-on-surface-variant hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="settings">settings</span>
+</button>
+</div>
+<!-- Section 1: Jadwal Hari Ini -->
+<section class="mb-xl">
+<h2 class="font-h2 text-h2 text-primary mb-lg">Jadwal Hari Ini</h2>
+<div class="flex flex-col gap-base">
+<!-- Class Item 1 -->
+<div class="flex gap-base items-stretch">
+<!-- Time Column -->
+<div class="flex flex-col items-end w-12 shrink-0 py-sm">
+<span class="font-label-medium text-label-medium text-primary">09.00</span>
+<div class="flex-grow w-px bg-muted-divider my-2 mr-1"></div>
+<span class="font-metadata text-metadata text-on-surface-variant">10.40</span>
+</div>
+<!-- Content Card -->
+<div class="bg-accent-sage custom-radius-24 p-base flex-grow relative overflow-hidden">
+<div class="flex items-start gap-md mb-md">
+<div class="bg-ink-on-dark text-on-primary w-12 h-12 flex items-center justify-center custom-radius-16 shrink-0">
+<span class="material-symbols-outlined text-[24px]" data-icon="menu_book">menu_book</span>
+</div>
+<div class="pt-1">
+<h3 class="font-h2 text-h2 text-primary">Pemrograman Web</h3>
+<p class="font-metadata text-metadata text-status-safe-fg mt-1">Ruang Lab 2 · Pak Budi</p>
+</div>
+</div>
+<div class="flex gap-sm">
+<button class="flex items-center gap-xs px-3 py-1.5 rounded-full border border-muted-divider bg-white/50 backdrop-blur-sm font-metadata text-metadata text-primary hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-[14px]" data-icon="open_in_new">open_in_new</span>
+                                ABSEN
+                            </button>
+<button class="flex items-center gap-xs px-3 py-1.5 rounded-full border border-muted-divider bg-white/50 backdrop-blur-sm font-metadata text-metadata text-primary hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-[14px]" data-icon="edit_note">edit_note</span>
+                                CATAT
+                            </button>
+</div>
+</div>
+</div>
+<!-- Class Item 2 -->
+<div class="flex gap-base items-stretch">
+<!-- Time Column -->
+<div class="flex flex-col items-end w-12 shrink-0 py-sm">
+<span class="font-label-medium text-label-medium text-primary">13.00</span>
+<div class="flex-grow w-px bg-muted-divider my-2 mr-1"></div>
+<span class="font-metadata text-metadata text-on-surface-variant">14.40</span>
+</div>
+<!-- Content Card -->
+<div class="bg-accent-mint custom-radius-24 p-base flex-grow relative overflow-hidden">
+<div class="flex items-start gap-md mb-md">
+<div class="bg-ink-on-dark text-on-primary w-12 h-12 flex items-center justify-center custom-radius-16 shrink-0">
+<span class="material-symbols-outlined text-[24px]" data-icon="code">code</span>
+</div>
+<div class="pt-1">
+<h3 class="font-h2 text-h2 text-primary">Basis Data</h3>
+<p class="font-metadata text-metadata text-status-safe-fg mt-1">Ruang C-203 · Bu Rina</p>
+</div>
+</div>
+<div class="flex gap-sm">
+<button class="flex items-center gap-xs px-3 py-1.5 rounded-full border border-muted-divider bg-white/50 backdrop-blur-sm font-metadata text-metadata text-primary hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-[14px]" data-icon="open_in_new">open_in_new</span>
+                                ABSEN
+                            </button>
+<button class="flex items-center gap-xs px-3 py-1.5 rounded-full border border-muted-divider bg-white/50 backdrop-blur-sm font-metadata text-metadata text-primary hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-[14px]" data-icon="edit_note">edit_note</span>
+                                CATAT
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 2: Deadline Terdekat -->
+<section class="mb-xl">
+<h2 class="font-h2 text-h2 text-primary mb-lg">Deadline Terdekat</h2>
+<div class="bg-status-urgent-bg custom-radius-24 p-base flex gap-md items-start">
+<!-- Date Box -->
+<div class="bg-ink-on-dark custom-radius-16 w-16 h-16 flex flex-col items-center justify-center text-on-primary shrink-0">
+<span class="font-display-numeric text-display-numeric leading-none -mb-1">02</span>
+<span class="font-metadata text-[10px] tracking-wider uppercase opacity-80 mt-1">SEP</span>
+</div>
+<!-- Content -->
+<div class="flex-grow pt-1">
+<div class="flex items-center gap-2 mb-1">
+<div class="w-1.5 h-1.5 rounded-full bg-status-urgent-fg"></div>
+<span class="font-metadata text-metadata text-status-urgent-fg font-bold tracking-wide uppercase">URGENT · 18 jam lagi</span>
+</div>
+<h3 class="font-h2 text-h2 text-primary mb-1">Laporan Analisis Sistem</h3>
+<p class="font-metadata text-metadata text-on-surface-variant mb-sm">Basis Data</p>
+<button class="flex items-center justify-center w-full mt-3 py-2 rounded-full border border-status-urgent-fg/30 bg-white/40 font-label-medium text-label-medium text-primary hover:bg-white/70 transition-colors">
+                        LIHAT TUGAS
+                    </button>
+</div>
+</div>
+</section>
+<!-- Spacer for bottom nav on mobile -->
+<div class="h-8 md:hidden"></div>
+</main>
+<!-- Bottom Navigation Bar (Mobile) -->
+<nav class="md:hidden fixed bottom-0 w-full rounded-t-xl bg-surface-container-lowest shadow-[0px_-2px_8px_rgba(0,0,0,0.06)] z-50 flex justify-around items-center px-base py-sm max-w-md mx-auto left-0 right-0 pb-safe">
+<!-- Active Tab: Beranda -->
+<button class="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform">
+<div class="flex items-center justify-center bg-secondary-container text-on-secondary-container rounded-full px-4 py-1 mb-1 group-hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[24px] font-bold" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+</div>
+<span class="font-label-medium text-label-medium text-primary font-bold">Beranda</span>
+</button>
+<!-- Inactive Tab: Jadwal -->
+<button class="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform">
+<div class="flex items-center justify-center text-on-surface-variant rounded-full px-4 py-1 mb-1 group-hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[24px]" data-icon="calendar_month">calendar_month</span>
+</div>
+<span class="font-label-medium text-label-medium text-on-surface-variant">Jadwal</span>
+</button>
+<!-- Inactive Tab: Tugas -->
+<button class="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform">
+<div class="flex items-center justify-center text-on-surface-variant rounded-full px-4 py-1 mb-1 group-hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[24px]" data-icon="assignment">assignment</span>
+</div>
+<span class="font-label-medium text-label-medium text-on-surface-variant">Tugas</span>
+</button>
+<!-- Inactive Tab: Proyek -->
+<button class="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform">
+<div class="flex items-center justify-center text-on-surface-variant rounded-full px-4 py-1 mb-1 group-hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[24px]" data-icon="folder_open">folder_open</span>
+</div>
+<span class="font-label-medium text-label-medium text-on-surface-variant">Proyek</span>
+</button>
+</nav>
+<!-- Side Navigation (Web) - Placeholder for structure, though main layout is max-w-md focused -->
+<nav class="hidden md:flex flex-col fixed left-0 top-0 h-screen w-64 bg-surface-container-lowest shadow-sm border-r border-muted-divider pt-20 px-4">
+<ul class="flex flex-col gap-2">
+<li>
+<a class="flex items-center gap-3 px-4 py-3 bg-secondary-container text-on-secondary-container rounded-lg font-label-medium text-label-medium font-bold" href="#">
+<span class="material-symbols-outlined" data-icon="home" style="font-variation-settings: 'FILL' 1;">home</span>
+                    Beranda
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors font-label-medium text-label-medium" href="#">
+<span class="material-symbols-outlined" data-icon="calendar_month">calendar_month</span>
+                    Jadwal
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors font-label-medium text-label-medium" href="#">
+<span class="material-symbols-outlined" data-icon="assignment">assignment</span>
+                    Tugas
+                </a>
+</li>
+<li>
+<a class="flex items-center gap-3 px-4 py-3 text-on-surface-variant hover:bg-surface-container-low rounded-lg transition-colors font-label-medium text-label-medium" href="#">
+<span class="material-symbols-outlined" data-icon="folder_open">folder_open</span>
+                    Proyek
+                </a>
+</li>
+</ul>
+</nav>
+<!-- Adjust layout for desktop sidebar -->
+<style>
+        @media (min-width: 768px) {
+            main { margin-left: 256px; max-w-none; }
+            header { padding-left: 280px; justify-content: flex-end;}
+            header > div { max-w-none; margin: 0; justify-content: flex-end;}
+        }
+    </style>
+</body></html>
