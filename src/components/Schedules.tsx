@@ -6,6 +6,8 @@ import { startOfWeek, addDays, subDays } from 'date-fns';
 import AddSchedule from './AddSchedule';
 import EditSchedule from './EditSchedule';
 import LogoutModal from './LogoutModal';
+import QuickNote from './QuickNote';
+import CourseDetail from './CourseDetail';
 import { getCourseTheme } from '../utils/courseTheme';
 
 const timeZone = 'Asia/Jakarta';
@@ -24,6 +26,8 @@ export default function Schedules({ setActiveView }: { setActiveView?: (view: 'h
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingSchedule, setEditingSchedule] = useState<any>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [activeNote, setActiveNote] = useState<any>(null);
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
 
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 }); // Monday
   const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i));
@@ -34,6 +38,10 @@ export default function Schedules({ setActiveView }: { setActiveView?: (view: 'h
   }, [schedules, selectedDate]);
 
   const dayNames = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+
+  if (selectedCourseId) {
+    return <CourseDetail courseId={selectedCourseId} onBack={() => setSelectedCourseId(null)} />;
+  }
 
   return (
     <div className="bg-[#FFFFFF] text-primary font-body antialiased min-h-screen w-full flex flex-col">
@@ -133,7 +141,11 @@ export default function Schedules({ setActiveView }: { setActiveView?: (view: 'h
 
               if (viewMode === 'weekly') {
                 return (
-                  <article key={schedule.id} className={`${theme.bgColor} rounded-[24px] p-4 flex gap-4 items-start w-full`}>
+                  <article 
+                    key={schedule.id} 
+                    onClick={() => setSelectedCourseId(schedule.course_id)}
+                    className={`${theme.bgColor} rounded-[24px] p-4 flex gap-4 items-start w-full cursor-pointer hover:opacity-90 transition-opacity`}
+                  >
                     <div className="w-[40px] h-[40px] bg-ink-on-dark rounded-xl flex items-center justify-center shrink-0">
                       <span className="material-symbols-outlined text-white text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>
                         {theme.icon}
@@ -153,7 +165,7 @@ export default function Schedules({ setActiveView }: { setActiveView?: (view: 'h
                       </div>
                     </div>
                     <button 
-                      onClick={() => setEditingSchedule({ schedule, color: theme.bgColor, icon: theme.icon })}
+                      onClick={(e) => { e.stopPropagation(); setEditingSchedule({ schedule, color: theme.bgColor, icon: theme.icon }); }}
                       className="flex items-center justify-center self-center mr-2 shrink-0 w-9 h-9 bg-surface-container-lowest rounded-full shadow-sm text-on-surface-variant hover:text-primary transition-colors active:scale-95"
                     >
                       <span className="material-symbols-outlined text-[20px]">edit</span>
@@ -173,7 +185,10 @@ export default function Schedules({ setActiveView }: { setActiveView?: (view: 'h
                   </div>
 
                   {/* Content Card */}
-                  <div className={`${theme.bgColor} rounded-[24px] p-4 flex-grow relative overflow-hidden w-full`}>
+                  <div 
+                    onClick={() => setSelectedCourseId(schedule.course_id)}
+                    className={`${theme.bgColor} rounded-[24px] p-4 flex-grow relative overflow-hidden w-full cursor-pointer hover:opacity-90 transition-opacity`}
+                  >
                     <div className="flex items-start gap-3 mb-3">
                       <div className="bg-ink-on-dark text-on-primary w-12 h-12 flex items-center justify-center rounded-[16px] shrink-0">
                         <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>{theme.icon}</span>
@@ -186,13 +201,16 @@ export default function Schedules({ setActiveView }: { setActiveView?: (view: 'h
                     
                     <div className="flex gap-2">
                       <button 
-                        onClick={() => window.open('https://spada.upnyk.ac.id/login/index.php', '_blank', 'noopener,noreferrer')}
+                        onClick={(e) => { e.stopPropagation(); window.open('https://spada.upnyk.ac.id/login/index.php', '_blank', 'noopener,noreferrer'); }}
                         className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-muted-divider bg-white/50 backdrop-blur-sm font-metadata text-metadata text-primary hover:bg-white transition-colors"
                       >
                         <span className="material-symbols-outlined text-[14px]" data-icon="open_in_new">open_in_new</span>
                         ABSEN
                       </button>
-                      <button className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-muted-divider bg-white/50 backdrop-blur-sm font-metadata text-metadata text-primary hover:bg-white transition-colors">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); setActiveNote(schedule); }}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-muted-divider bg-white/50 backdrop-blur-sm font-metadata text-metadata text-primary hover:bg-white transition-colors"
+                      >
                         <span className="material-symbols-outlined text-[14px]" data-icon="edit_note">edit_note</span>
                         CATAT
                       </button>
@@ -228,6 +246,16 @@ export default function Schedules({ setActiveView }: { setActiveView?: (view: 'h
         />
       )}
 
+      {activeNote && (
+        <QuickNote
+          course_id={activeNote.course_id}
+          course_name={activeNote.course?.name || 'Unknown Course'}
+          date={selectedDate}
+          onClose={() => setActiveNote(null)}
+          onSuccess={() => fetchSchedules()}
+        />
+      )}
+
       {/* Global Bottom Navbar (Full Width) */}
       <nav className="fixed bottom-0 left-0 right-0 w-full bg-[#FFFFFF] border-t border-[#EBEAE6] z-50 pb-safe">
         <div className="flex justify-around items-center px-4 py-2 max-w-4xl mx-auto w-full">
@@ -254,7 +282,10 @@ export default function Schedules({ setActiveView }: { setActiveView?: (view: 'h
           </button>
 
           {/* Item 3 (Inactive) */}
-          <button className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform">
+          <button 
+            className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform"
+            onClick={() => setActiveView?.('tasks')}
+          >
             <div className="flex items-center justify-center text-[#848484] rounded-[16px] w-12 h-8 mb-1">
               <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>assignment</span>
             </div>

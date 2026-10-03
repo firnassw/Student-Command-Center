@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from './lib/supabase';
 import Dashboard from './components/Dashboard';
 import Schedules from './components/Schedules';
+import Tasks from './components/Tasks';
 
 function App() {
   const [session, setSession] = useState<any>(null);
@@ -15,7 +16,7 @@ function App() {
 
   const [showNotifPrompt, setShowNotifPrompt] = useState(false);
   const [skippedNotif, setSkippedNotif] = useState(false);
-  const [activeView, setActiveView] = useState<'home' | 'schedules'>('home');
+  const [activeView, setActiveView] = useState<'home' | 'schedules' | 'tasks'>('home');
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -269,6 +270,10 @@ function App() {
 
   if (activeView === 'schedules') {
     return <Schedules setActiveView={setActiveView} />;
+  }
+  
+  if (activeView === 'tasks') {
+    return <Tasks setActiveView={setActiveView} />;
   }
 
   return <Dashboard setActiveView={setActiveView} />;

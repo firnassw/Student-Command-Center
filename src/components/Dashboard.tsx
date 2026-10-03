@@ -3,7 +3,10 @@ import { useSchedules, useTasks } from '../hooks/useSupabaseData';
 import { supabase } from '../lib/supabase';
 import { toZonedTime, format } from 'date-fns-tz';
 import LogoutModal from './LogoutModal';
+import QuickNote from './QuickNote';
 import { getCourseTheme } from '../utils/courseTheme';
+import { usePushSubscription } from '../hooks/usePushSubscription';
+
 // Helper to format date in Jakarta timezone
 const getJakartaDateInfo = () => {
   const timeZone = 'Asia/Jakarta';
@@ -45,11 +48,13 @@ const getDeadlineDate = (dateStr: string) => {
   return { day, month };
 };
 
-export default function Dashboard({ setActiveView }: { setActiveView?: (view: 'home' | 'schedules') => void }) {
-  const { schedules, loading: schedulesLoading } = useSchedules();
+export default function Dashboard({ setActiveView }: { setActiveView?: (view: 'home' | 'schedules' | 'tasks') => void }) {
+  const { schedules, loading: schedulesLoading, fetchSchedules } = useSchedules();
   const { tasks, loading: tasksLoading } = useTasks();
   const [userName, setUserName] = React.useState('Pelajar');
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
+  const [activeNote, setActiveNote] = React.useState<any>(null);
+  const { subscribeToPush, isSubscribing, isSubscribed, error } = usePushSubscription();
 
   React.useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -97,6 +102,31 @@ export default function Dashboard({ setActiveView }: { setActiveView?: (view: 'h
         </div>
       </header>
 
+      {/* Push Notification Banner */}
+      {!isSubscribed && (
+        <div className="w-full max-w-2xl mx-auto px-4 mt-4 mb-2">
+          <div className="bg-[#191B1F] rounded-[16px] p-4 flex items-center justify-between shadow-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                <span className="material-symbols-outlined text-[#FFFFFF] text-[20px]">notifications_active</span>
+              </div>
+              <div className="flex flex-col">
+                <span className="font-h2 text-[14px] font-bold text-[#FFFFFF]">Pengingat Absen Aktif</span>
+                <span className="text-[12px] text-white/70">Terima notifikasi 15 menit sebelum kelas</span>
+              </div>
+            </div>
+            <button 
+              onClick={subscribeToPush}
+              disabled={isSubscribing}
+              className="bg-[#FFFFFF] text-[#191B1F] px-4 py-2 rounded-full font-bold text-[12px] hover:bg-[#F3F3F3] active:scale-95 transition-all whitespace-nowrap ml-2 disabled:opacity-50"
+            >
+              {isSubscribing ? 'MEMPROSES...' : 'AKTIFKAN'}
+            </button>
+          </div>
+          {error && <p className="text-error text-[11px] mt-2 font-medium px-2">{error}</p>}
+        </div>
+      )}
+
       {/* Main Content (Centered, Max Width) */}
       <main className="flex-grow w-full max-w-2xl mx-auto px-4 pt-6 pb-28 md:pb-32 flex flex-col gap-8">
         
@@ -142,7 +172,10 @@ export default function Dashboard({ setActiveView }: { setActiveView?: (view: 'h
                         <span className="material-symbols-outlined text-[14px]" data-icon="open_in_new">open_in_new</span>
                         ABSEN
                       </button>
-                      <button className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-muted-divider bg-white/50 backdrop-blur-sm font-metadata text-metadata text-primary hover:bg-white transition-colors">
+                      <button 
+                        onClick={() => setActiveNote(schedule)}
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-muted-divider bg-white/50 backdrop-blur-sm font-metadata text-metadata text-primary hover:bg-white transition-colors"
+                      >
                         <span className="material-symbols-outlined text-[14px]" data-icon="edit_note">edit_note</span>
                         CATAT
                       </button>
@@ -217,7 +250,10 @@ export default function Dashboard({ setActiveView }: { setActiveView?: (view: 'h
           </button>
 
           {/* Item 3 (Inactive) */}
-          <button className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform">
+          <button 
+            className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform"
+            onClick={() => setActiveView?.('tasks')}
+          >
             <div className="flex items-center justify-center text-[#848484] rounded-[16px] w-12 h-8 mb-1">
               <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>assignment</span>
             </div>
@@ -244,6 +280,16 @@ export default function Dashboard({ setActiveView }: { setActiveView?: (view: 'h
 
       {/* Logout Confirmation Modal */}
       <LogoutModal isOpen={showLogoutConfirm} onClose={() => setShowLogoutConfirm(false)} />
+
+      {activeNote && (
+        <QuickNote
+          course_id={activeNote.course_id}
+          course_name={activeNote.course?.name || 'Unknown Course'}
+          date={new Date()}
+          onClose={() => setActiveNote(null)}
+          onSuccess={() => fetchSchedules()}
+        />
+      )}
     </div>
   );
 }
