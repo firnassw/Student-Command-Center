@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
 import { supabase } from './lib/supabase';
 import Dashboard from './components/Dashboard';
 import Schedules from './components/Schedules';
 import Tasks from './components/Tasks';
+import TaskDetail from './components/TaskDetail';
 
 function App() {
   const [session, setSession] = useState<any>(null);
@@ -16,7 +18,7 @@ function App() {
 
   const [showNotifPrompt, setShowNotifPrompt] = useState(false);
   const [skippedNotif, setSkippedNotif] = useState(false);
-  const [activeView, setActiveView] = useState<'home' | 'schedules' | 'tasks'>('home');
+  const navigate = useNavigate();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -268,15 +270,18 @@ function App() {
     );
   }
 
-  if (activeView === 'schedules') {
-    return <Schedules setActiveView={setActiveView} />;
-  }
-  
-  if (activeView === 'tasks') {
-    return <Tasks setActiveView={setActiveView} />;
-  }
+  const handleNav = (v: 'home' | 'schedules' | 'tasks') => {
+    navigate(v === 'home' ? '/' : '/' + v);
+  };
 
-  return <Dashboard setActiveView={setActiveView} />;
+  return (
+    <Routes>
+      <Route path="/" element={<Dashboard setActiveView={handleNav} />} />
+      <Route path="/schedules" element={<Schedules setActiveView={handleNav} />} />
+      <Route path="/tasks" element={<Tasks setActiveView={handleNav} />} />
+      <Route path="/tasks/:id" element={<TaskDetail />} />
+    </Routes>
+  );
 }
 
 export default App;

@@ -102,6 +102,20 @@ export default {
         "h1-mobile": ["20px", { lineHeight: "28px", fontWeight: "700" }],
         "label-medium": ["14px", { lineHeight: "20px", fontWeight: "500" }],
         "metadata": ["12px", { lineHeight: "16px", fontWeight: "500" }]
+      },
+      keyframes: {
+        fadeIn: {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        slideUp: {
+          '0%': { opacity: '0', transform: 'translateY(100px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        }
+      },
+      animation: {
+        'fade-in': 'fadeIn 0.4s ease-out forwards',
+        'slide-up': 'slideUp 0.4s ease-out forwards',
       }
     }
   },

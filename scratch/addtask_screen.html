@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=390, height=844, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Tambah Tugas - Student Command Center</title>
+  <!-- Google Fonts: Plus Jakarta Sans & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'bg-app': '#FFFFFF',
+            'ink-primary': '#000000',
+            'ink-dark': '#141414',
+            'muted-text': '#71717A',
+            'muted-divider': '#D9D9D9',
+            'accent-sand': '#F7EACA',
+            'accent-peach': '#EED4BA',
+            'accent-mint': '#DFEDED',
+            'accent-sage': '#E0EEDD',
+            'surface-light': '#FBFBFB',
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Plus Jakarta Sans', 'sans-serif'],
+          },
+          borderRadius: {
+            '16': '16px',
+            '24': '24px',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #F4F4F5;
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+    .mobile-frame {
+      width: 390px;
+      height: 844px;
+      max-height: 844px;
+      background-color: #FFFFFF;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 20px 40px -15px rgba(0,0,0,0.07);
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 390 x 844 Android PWA Container -->
+  <div class="mobile-frame">
+    
+    <!-- Android Status Bar -->
+    <div class="w-full px-6 pt-3 pb-1 flex items-center justify-between text-xs font-semibold text-ink-primary select-none bg-white z-20">
+      <span>09:41</span>
+      <div class="flex items-center space-x-1.5">
+        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 18.23C3.52 16.54 3 14.36 3 12c0-4.97 4.03-9 9-9s9 4.03 9 9c0 2.36-.52 4.54-1.35 6.23l-.62-.62C20.26 16.07 21 14.12 21 12c0-4.97-4.03-9-9-9zm0 4c-2.76 0-5 2.24-5 5 0 1.25.46 2.4 1.22 3.3l.71-.71C8.36 13.9 8 13 8 12c0-2.21 1.79-4 4-4s4 1.79 4 4c0 1-.36 1.9-.93 2.59l.71.71c.76-.9 1.22-2.05 1.22-3.3 0-2.76-2.24-5-5-5zm0 4c-.55 0-1 .45-1 1 0 .28.11.53.29.71l.71-.71V12z"/></svg>
+        <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 4C7.31 4 3.07 5.9 0 8.98L12 21 24 8.98C20.93 5.9 16.69 4 12 4z"/></svg>
+        <!-- Battery Icon -->
+        <div class="w-5 h-2.5 border border-ink-primary rounded-[3px] p-0.5 flex items-center">
+          <div class="h-full w-3 bg-ink-primary rounded-[1px]"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- App Bar -->
+    <header class="w-full px-5 py-3 flex items-center justify-between bg-white border-b border-muted-divider/40 z-20">
+      <div class="flex items-center space-x-3">
+        <button type="button" aria-label="Kembali" class="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-ink-primary active:bg-gray-100 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/>
+          </svg>
+        </button>
+        <h1 class="font-display font-bold text-[19px] text-ink-primary tracking-tight">Tambah Tugas</h1>
+      </div>
+      <button type="button" class="px-2 py-1 font-display font-bold text-xs tracking-wider text-ink-primary hover:opacity-80 active:opacity-60 transition-opacity">
+        SIMPAN
+      </button>
+    </header>
+
+    <!-- Scrollable Form Body -->
+    <main class="flex-1 overflow-y-auto hide-scrollbar px-6 pt-5 pb-32">
+      <form class="space-y-5" onsubmit="event.preventDefault();">
+
+        <!-- Judul Tugas -->
+        <div>
+          <label class="block font-sans font-medium text-[11px] tracking-wider uppercase text-muted-text mb-1.5">
+            Judul Tugas
+          </label>
+          <div class="relative">
+            <input 
+              type="text" 
+              value="Laporan Analisis Sistem"
+              class="w-full h-13 px-4 py-3.5 bg-white border border-muted-divider rounded-16 font-display font-semibold text-[15px] text-ink-primary focus:outline-none focus:border-ink-dark transition-colors placeholder:text-gray-400 shadow-sm"
+              placeholder="Masukkan judul tugas..."
+            />
+          </div>
+        </div>
+
+        <!-- Mata Kuliah (Outlined Selection Pill) -->
+        <div>
+          <label class="block font-sans font-medium text-[11px] tracking-wider uppercase text-muted-text mb-1.5">
+            Mata Kuliah
+          </label>
+          <div class="w-full px-4 py-3 bg-white border border-muted-divider rounded-16 flex items-center justify-between shadow-sm cursor-pointer hover:border-gray-400 transition-colors">
+            <div class="flex items-center space-x-2.5">
+              <div class="w-8 h-8 rounded-lg bg-ink-dark flex items-center justify-center text-white">
+                <!-- Course Book Icon -->
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"/>
+                </svg>
+              </div>
+              <div>
+                <span class="font-display font-semibold text-sm text-ink-primary block leading-snug">Basis Data</span>
+                <span class="font-sans text-[11px] text-muted-text block leading-none mt-0.5">3 SKS · Teori & Praktikum</span>
+              </div>
+            </div>
+            <!-- Selection Chevron / Badge -->
+            <div class="flex items-center space-x-1">
+              <span class="text-[11px] font-sans font-medium text-muted-text">Ubah</span>
+              <svg class="w-4 h-4 text-muted-text" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Deadline & Waktu (Side-by-side 2 Kolom) -->
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Deadline -->
+          <div>
+            <label class="block font-sans font-medium text-[11px] tracking-wider uppercase text-muted-text mb-1.5">
+              Deadline
+            </label>
+            <div class="w-full h-13 px-3.5 py-3 bg-white border border-muted-divider rounded-16 flex items-center justify-between shadow-sm cursor-pointer hover:border-gray-400 transition-colors">
+              <span class="font-sans text-sm font-medium text-ink-primary truncate">2 September 2026</span>
+              <svg class="w-4 h-4 text-muted-text flex-shrink-0 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Waktu -->
+          <div>
+            <label class="block font-sans font-medium text-[11px] tracking-wider uppercase text-muted-text mb-1.5">
+              Waktu
+            </label>
+            <div class="w-full h-13 px-3.5 py-3 bg-white border border-muted-divider rounded-16 flex items-center justify-between shadow-sm cursor-pointer hover:border-gray-400 transition-colors">
+              <span class="font-sans text-sm font-medium text-ink-primary">08.00 WIB</span>
+              <svg class="w-4 h-4 text-muted-text flex-shrink-0 ml-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Prioritas (Segmented Selector) -->
+        <div>
+          <label class="block font-sans font-medium text-[11px] tracking-wider uppercase text-muted-text mb-1.5">
+            Prioritas
+          </label>
+          <div class="w-full p-1 bg-gray-100 rounded-16 flex items-center justify-between border border-muted-divider/50">
+            <!-- Rendah -->
+            <button type="button" class="flex-1 py-2 rounded-xl text-center text-xs font-sans font-medium text-muted-text hover:text-ink-primary transition-all">
+              Rendah
+            </button>
+            <!-- Sedang -->
+            <button type="button" class="flex-1 py-2 rounded-xl text-center text-xs font-sans font-medium text-muted-text hover:text-ink-primary transition-all">
+              Sedang
+            </button>
+            <!-- Tinggi (Active) -->
+            <button type="button" class="flex-1 py-2 rounded-xl text-center text-xs font-display font-bold text-white bg-ink-dark shadow-sm transition-all flex items-center justify-center space-x-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent-peach inline-block mr-1"></span>
+              <span>Tinggi</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Status (Default: To do) -->
+        <div>
+          <label class="block font-sans font-medium text-[11px] tracking-wider uppercase text-muted-text mb-1.5">
+            Status
+          </label>
+          <div class="w-full px-4 py-3.5 bg-white border border-muted-divider rounded-16 flex items-center justify-between shadow-sm cursor-pointer hover:border-gray-400 transition-colors">
+            <div class="flex items-center space-x-2">
+              <div class="w-2.5 h-2.5 rounded-full bg-gray-400"></div>
+              <span class="font-sans text-sm font-medium text-ink-primary">To do</span>
+            </div>
+            <svg class="w-4 h-4 text-muted-text" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Project Terkait (Selection: Tidak Ada) -->
+        <div>
+          <label class="block font-sans font-medium text-[11px] tracking-wider uppercase text-muted-text mb-1.5">
+            Project Terkait
+          </label>
+          <div class="w-full px-4 py-3.5 bg-white border border-muted-divider rounded-16 flex items-center justify-between shadow-sm cursor-pointer hover:border-gray-400 transition-colors">
+            <div class="flex items-center space-x-2.5">
+              <svg class="w-4 h-4 text-muted-text" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 014.5 9.75h15A2.25 2.25 0 0121 12v.75m-8.69-6.44l-2.12-2.12a1.5 1.5 0 00-1.061-.44H4.5A2.25 2.25 0 002.25 6v12a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021 18V9.75M12 9.75v10.5"/>
+              </svg>
+              <span class="font-sans text-sm text-muted-text">Tidak ada</span>
+            </div>
+            <svg class="w-4 h-4 text-muted-text" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Muted Helper Text -->
+        <div class="pt-1 flex items-start space-x-2">
+          <svg class="w-3.5 h-3.5 text-muted-text/80 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"/>
+          </svg>
+          <p class="font-sans text-xs text-muted-text leading-relaxed">
+            Tugas ditambahkan secara manual sesuai instruksi dosen.
+          </p>
+        </div>
+
+      </form>
+    </main>
+
+    <!-- Sticky Bottom Primary Button Bar -->
+    <div class="absolute bottom-0 left-0 right-0 p-5 bg-white/95 backdrop-blur-sm border-t border-muted-divider/40 z-30">
+      <button 
+        type="button" 
+        class="w-full h-13 py-3.5 px-6 rounded-full bg-ink-dark text-white font-display font-bold text-sm tracking-wider flex items-center justify-center space-x-2 shadow-sm hover:opacity-95 active:scale-[0.99] transition-transform"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/>
+        </svg>
+        <span>SIMPAN TUGAS</span>
+      </button>
+      
+      <!-- Android Navigation Bar Hint -->
+      <div class="w-28 h-1 bg-ink-primary/20 rounded-full mx-auto mt-3"></div>
+    </div>
+
+  </div>
+
+</body>
+</html>

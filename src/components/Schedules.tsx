@@ -9,6 +9,7 @@ import LogoutModal from './LogoutModal';
 import QuickNote from './QuickNote';
 import CourseDetail from './CourseDetail';
 import { getCourseTheme } from '../utils/courseTheme';
+import { useNavigate } from 'react-router-dom';
 
 const timeZone = 'Asia/Jakarta';
 
@@ -19,7 +20,8 @@ const formatTimeJakarta = (timeStr: string) => {
   return timeStr.substring(0, 5).replace(':', '.');
 };
 
-export default function Schedules({ setActiveView }: { setActiveView?: (view: 'home' | 'schedules') => void }) {
+export default function Schedules() {
+  const navigate = useNavigate();
   const { schedules, loading, fetchSchedules } = useSchedules();
   const [viewMode, setViewMode] = useState<'today' | 'weekly'>('weekly');
   const [selectedDate, setSelectedDate] = useState(() => toZonedTime(new Date(), timeZone));
@@ -262,7 +264,7 @@ export default function Schedules({ setActiveView }: { setActiveView?: (view: 'h
           {/* Item 1 (Inactive) */}
           <button 
             className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform"
-            onClick={() => setActiveView?.('home')}
+            onClick={() => navigate('/')}
           >
             <div className="flex items-center justify-center text-[#848484] rounded-[16px] w-12 h-8 mb-1">
               <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>home</span>
@@ -273,7 +275,7 @@ export default function Schedules({ setActiveView }: { setActiveView?: (view: 'h
           {/* Item 2 (Active) */}
           <button 
             className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform"
-            onClick={() => setActiveView?.('schedules')}
+            onClick={() => navigate('/schedules')}
           >
             <div className="flex items-center justify-center bg-[#0D0D0D] text-[#FFFFFF] rounded-[16px] w-12 h-8 mb-1">
               <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>calendar_month</span>
@@ -284,7 +286,7 @@ export default function Schedules({ setActiveView }: { setActiveView?: (view: 'h
           {/* Item 3 (Inactive) */}
           <button 
             className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform"
-            onClick={() => setActiveView?.('tasks')}
+            onClick={() => navigate('/tasks')}
           >
             <div className="flex items-center justify-center text-[#848484] rounded-[16px] w-12 h-8 mb-1">
               <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>assignment</span>

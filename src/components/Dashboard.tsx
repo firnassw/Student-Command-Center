@@ -5,6 +5,7 @@ import { toZonedTime, format } from 'date-fns-tz';
 import LogoutModal from './LogoutModal';
 import QuickNote from './QuickNote';
 import { getCourseTheme } from '../utils/courseTheme';
+import { calculateUrgency, getUrgencyStyles } from '../utils/urgencyCalculator';
 import { usePushSubscription } from '../hooks/usePushSubscription';
 
 // Helper to format date in Jakarta timezone
@@ -48,7 +49,10 @@ const getDeadlineDate = (dateStr: string) => {
   return { day, month };
 };
 
-export default function Dashboard({ setActiveView }: { setActiveView?: (view: 'home' | 'schedules' | 'tasks') => void }) {
+import { useNavigate } from 'react-router-dom';
+
+export default function Dashboard() {
+  const navigate = useNavigate();
   const { schedules, loading: schedulesLoading, fetchSchedules } = useSchedules();
   const { tasks, loading: tasksLoading } = useTasks();
   const [userName, setUserName] = React.useState('Pelajar');
@@ -198,27 +202,34 @@ export default function Dashboard({ setActiveView }: { setActiveView?: (view: 'h
               <p className="text-on-surface-variant font-label-medium">No upcoming deadlines</p>
             </div>
           ) : (
-            <div className="bg-status-urgent-bg rounded-[24px] p-4 flex gap-3 items-start w-full">
-              <div className="bg-ink-on-dark rounded-[16px] w-16 h-16 flex flex-col items-center justify-center text-on-primary shrink-0">
-                <span className="font-display-numeric text-display-numeric leading-none -mb-1">{getDeadlineDate(nearestTask.deadline).day}</span>
-                <span className="font-metadata text-[10px] tracking-wider uppercase opacity-80 mt-1">{getDeadlineDate(nearestTask.deadline).month}</span>
-              </div>
+            (() => {
+              const urgencyInfo = calculateUrgency(nearestTask.deadline);
+              const styles = getUrgencyStyles(urgencyInfo.type);
               
-              <div className="flex-grow pt-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-1.5 h-1.5 rounded-full bg-status-urgent-fg"></div>
-                  <span className="font-metadata text-metadata text-status-urgent-fg font-bold tracking-wide uppercase">
-                    URGENT · {getDaysUntilDeadline(nearestTask.deadline)}
-                  </span>
+              return (
+                <div className={`${styles.cardBg} rounded-[24px] p-4 flex gap-3 items-start w-full cursor-pointer hover:-translate-y-1 transition-transform`} onClick={() => navigate('/tasks')}>
+                  <div className="bg-ink-on-dark rounded-[16px] w-16 h-16 flex flex-col items-center justify-center text-on-primary shrink-0">
+                    <span className="font-display-numeric text-display-numeric leading-none -mb-1">{getDeadlineDate(nearestTask.deadline).day}</span>
+                    <span className="font-metadata text-[10px] tracking-wider uppercase opacity-80 mt-1">{getDeadlineDate(nearestTask.deadline).month}</span>
+                  </div>
+                  
+                  <div className="flex-grow pt-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className={`w-1.5 h-1.5 rounded-full ${styles.dotBg}`}></div>
+                      <span className={`font-metadata text-metadata ${styles.textColor} font-bold tracking-wide uppercase`}>
+                        {urgencyInfo.text}
+                      </span>
+                    </div>
+                    <h3 className="font-h2 text-h2 text-primary mb-1">{nearestTask.title}</h3>
+                    <p className="font-metadata text-metadata text-on-surface-variant mb-2">{nearestTask.course?.name || 'Umum'}</p>
+                    
+                    <button className="flex items-center justify-center w-full py-2 rounded-full border border-black/10 bg-white/40 font-label-medium text-label-medium text-primary hover:bg-white/70 transition-colors">
+                      LIHAT TUGAS
+                    </button>
+                  </div>
                 </div>
-                <h3 className="font-h2 text-h2 text-primary mb-1">{nearestTask.title}</h3>
-                <p className="font-metadata text-metadata text-on-surface-variant mb-2">{nearestTask.course?.name || 'General'}</p>
-                
-                <button className="flex items-center justify-center w-full py-2 rounded-full border border-status-urgent-fg/30 bg-white/40 font-label-medium text-label-medium text-primary hover:bg-white/70 transition-colors">
-                  LIHAT TUGAS
-                </button>
-              </div>
-            </div>
+              );
+            })()
           )}
         </section>
 
@@ -230,7 +241,7 @@ export default function Dashboard({ setActiveView }: { setActiveView?: (view: 'h
           {/* Item 1 (Active) */}
           <button 
             className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform"
-            onClick={() => setActiveView?.('home')}
+            onClick={() => navigate('/')}
           >
             <div className="flex items-center justify-center bg-[#0D0D0D] text-[#FFFFFF] rounded-[16px] w-12 h-8 mb-1">
               <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>home</span>
@@ -241,7 +252,7 @@ export default function Dashboard({ setActiveView }: { setActiveView?: (view: 'h
           {/* Item 2 (Inactive) */}
           <button 
             className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform"
-            onClick={() => setActiveView?.('schedules')}
+            onClick={() => navigate('/schedules')}
           >
             <div className="flex items-center justify-center text-[#848484] rounded-[16px] w-12 h-8 mb-1">
               <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>calendar_month</span>
@@ -252,7 +263,7 @@ export default function Dashboard({ setActiveView }: { setActiveView?: (view: 'h
           {/* Item 3 (Inactive) */}
           <button 
             className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform"
-            onClick={() => setActiveView?.('tasks')}
+            onClick={() => navigate('/tasks')}
           >
             <div className="flex items-center justify-center text-[#848484] rounded-[16px] w-12 h-8 mb-1">
               <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>assignment</span>

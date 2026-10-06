@@ -3,17 +3,22 @@ import { supabase } from '../lib/supabase';
 import { Task } from '../hooks/useSupabaseData';
 import { calculateUrgency, getUrgencyStyles, UrgencyInfo } from '../utils/urgencyCalculator';
 
+import AddTask from './AddTask';
+import { useNavigate } from 'react-router-dom';
+
 type ExtendedTask = Task & {
   urgencyInfo: UrgencyInfo;
 };
 
 type FilterTab = 'semua' | 'belum' | 'selesai';
 
-export default function Tasks({ setActiveView }: { setActiveView?: (view: 'home' | 'schedules' | 'tasks') => void }) {
+export default function Tasks() {
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState<ExtendedTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<FilterTab>('semua');
+  const [showAddTask, setShowAddTask] = useState(false);
 
   useEffect(() => {
     fetchTasks();
@@ -39,11 +44,14 @@ export default function Tasks({ setActiveView }: { setActiveView?: (view: 'home'
       }
 
       if (data) {
-        const formattedTasks: ExtendedTask[] = data.map((t: any) => ({
-          ...t,
-          course: t.courses ? { name: t.courses.name } : undefined,
-          urgencyInfo: calculateUrgency(t.deadline)
-        }));
+        const formattedTasks: ExtendedTask[] = data.map((t: any) => {
+          const courseData = Array.isArray(t.courses) ? t.courses[0] : t.courses;
+          return {
+            ...t,
+            course: courseData ? { name: courseData.name } : undefined,
+            urgencyInfo: calculateUrgency(t.deadline)
+          };
+        });
         setTasks(formattedTasks);
       }
     } catch (err: any) {
@@ -74,21 +82,20 @@ export default function Tasks({ setActiveView }: { setActiveView?: (view: 'home'
   return (
     <div className="bg-[#F4F4F5] min-h-screen w-full flex flex-col font-sans">
       <div className="w-full flex-1 flex flex-col">
-        {/* Header Section */}
-        <header className="w-full bg-white z-10 sticky top-0 shadow-sm">
-          <div className="max-w-2xl mx-auto px-6 pt-4 pb-4 flex justify-between items-center w-full">
+        {/* Sticky Top Bar (Header + Filters) */}
+        <div className="w-full bg-white z-10 sticky top-0 border-b border-[#E4E4E7]/50">
+          {/* Header Section */}
+          <header className="max-w-2xl mx-auto px-6 pt-4 pb-4 flex justify-between items-center w-full">
             <h1 className="font-headline font-bold text-[32px] leading-tight text-base-ink tracking-tight">
               Tugas
             </h1>
             <button aria-label="Filter tugas" className="w-10 h-10 rounded-full flex items-center justify-center text-base-dark hover:bg-neutral-100 active:scale-95 transition-all">
               <span className="material-symbols-outlined text-[24px]">tune</span>
             </button>
-          </div>
-        </header>
+          </header>
 
-        {/* Filter Pills */}
-        <section className="w-full bg-white z-10 sticky top-[76px] border-b border-[#E4E4E7]/50">
-          <div className="max-w-2xl mx-auto px-6 pb-4">
+          {/* Filter Pills */}
+          <section className="max-w-2xl mx-auto px-6 pb-4">
             <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar py-0.5">
               <button 
                 onClick={() => setActiveTab('semua')}
@@ -122,8 +129,8 @@ export default function Tasks({ setActiveView }: { setActiveView?: (view: 'home'
                 Selesai
               </button>
             </div>
-          </div>
-        </section>
+          </section>
+        </div>
 
         {/* Main Content Area */}
         <main className="flex-1 w-full max-w-2xl mx-auto px-6 pt-6 pb-28 no-scrollbar space-y-4">
@@ -142,41 +149,53 @@ export default function Tasks({ setActiveView }: { setActiveView?: (view: 'home'
             <p className="text-neutral-500 font-medium text-sm">Tidak ada tugas.</p>
           </div>
         ) : (
-          filteredTasks.map((task) => {
+          filteredTasks.map((task, index) => {
             const styles = getUrgencyStyles(task.urgencyInfo.type);
             
             return (
               <article 
                 key={task.id}
-                className={`p-4 rounded-[24px] ${styles.cardBg} border ${styles.cardBorder} shadow-[0_2px_8px_rgba(0,0,0,0.03)] transition-all hover:translate-y-[-1px] cursor-pointer opacity-0 animate-[fadeIn_0.3s_ease-out_forwards]`}
+                onClick={() => navigate(`/tasks/${task.id}`)}
+                className={`group relative p-5 rounded-[24px] shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden ${styles.cardBg}`}
               >
                 {/* Header status pill */}
-                <div className="flex justify-between items-center mb-2.5">
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full ${styles.pillBg} ${styles.textColor} text-[11px] font-semibold tracking-wide uppercase`}>
+                <div className="flex justify-between items-center mb-3">
+                  <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/5 text-[#1b1b1b] text-[10px] font-bold tracking-widest uppercase`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${styles.dotBg}`}></span>
                     {task.urgencyInfo.text}
-                  </span>
+                  </div>
                   
                   {task.status === 'completed' && (
-                    <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-white/60 text-green-700 border border-green-700/20">
+                    <span className="flex items-center gap-1 text-[11px] font-bold px-3 py-1.5 rounded-full bg-green-50 text-green-700 border border-green-200 shadow-sm">
+                      <span className="material-symbols-outlined text-[14px]">done_all</span>
                       Selesai
                     </span>
                   )}
                 </div>
 
-                {/* Task Title */}
-                <h2 className="font-headline font-bold text-lg text-base-ink leading-snug tracking-tight mb-1.5 line-clamp-2">
+                {/* Task Title & Description */}
+                <h2 className="font-headline font-bold text-[19px] text-[#111827] leading-snug tracking-tight mb-2 group-hover:text-black transition-colors line-clamp-2 pr-2">
                   {task.title}
                 </h2>
+                
+                {task.description && (
+                  <p className="text-[13px] text-gray-700/80 line-clamp-2 mb-4 pr-2 font-medium">
+                    {task.description}
+                  </p>
+                )}
+
+                {/* Divider */}
+                <div className="w-full h-[1px] bg-black/5 mb-3 mt-1 rounded-full"></div>
 
                 {/* Course Meta & Deadline Details */}
-                <div className={`flex items-center justify-between pt-1 border-t ${styles.textColor} border-opacity-15 text-xs`}>
-                  <div className="flex items-center gap-1.5 font-medium truncate max-w-[60%]">
-                    <span className="material-symbols-outlined text-[16px]">menu_book</span>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-[#4B5563] text-xs font-semibold">
+                  <div className="flex items-center gap-2 max-w-[70%] text-[#4B5563]">
+                    <span className="material-symbols-outlined text-[16px] opacity-80">checklist</span>
                     <span className="truncate">{task.course?.name || 'Umum'}</span>
                   </div>
-                  <div className="flex items-center gap-1 font-medium whitespace-nowrap">
-                    <span className="material-symbols-outlined text-[15px]">schedule</span>
+                  
+                  <div className="flex items-center gap-1.5 whitespace-nowrap text-[#4B5563]">
+                    <span className="material-symbols-outlined text-[16px] opacity-80">event</span>
                     <span>{formatDeadline(task.deadline)}</span>
                   </div>
                 </div>
@@ -193,11 +212,21 @@ export default function Tasks({ setActiveView }: { setActiveView?: (view: 'home'
         <button 
           aria-label="Tambah Tugas" 
           className="w-14 h-14 rounded-full bg-[#141414] text-white flex items-center justify-center shadow-[0_8px_16px_rgba(0,0,0,0.15)] hover:bg-black hover:-translate-y-1 active:scale-90 transition-all duration-200"
-          onClick={() => alert('Fitur Tambah Tugas akan segera hadir!')}
+          onClick={() => setShowAddTask(true)}
         >
           <span className="material-symbols-outlined text-[28px]">add</span>
         </button>
       </div>
+
+      {showAddTask && (
+        <AddTask 
+          onBack={() => setShowAddTask(false)} 
+          onSuccess={() => {
+            setShowAddTask(false);
+            fetchTasks();
+          }} 
+        />
+      )}
 
       {/* Global Bottom Navbar (Full Width) */}
       <nav className="fixed bottom-0 left-0 right-0 w-full bg-[#FFFFFF] border-t border-[#EBEAE6] z-50 pb-safe">
@@ -205,7 +234,7 @@ export default function Tasks({ setActiveView }: { setActiveView?: (view: 'home'
           {/* Item 1 (Inactive) */}
           <button 
             className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform"
-            onClick={() => setActiveView?.('home')}
+            onClick={() => navigate('/')}
           >
             <div className="flex items-center justify-center text-[#848484] rounded-[16px] w-12 h-8 mb-1">
               <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>home</span>
@@ -216,7 +245,7 @@ export default function Tasks({ setActiveView }: { setActiveView?: (view: 'home'
           {/* Item 2 (Inactive) */}
           <button 
             className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform"
-            onClick={() => setActiveView?.('schedules')}
+            onClick={() => navigate('/schedules')}
           >
             <div className="flex items-center justify-center text-[#848484] rounded-[16px] w-12 h-8 mb-1">
               <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>calendar_month</span>
