@@ -1,50 +1,93 @@
-import React, { useState, useEffect } from 'react';
-import { useSchedules } from '../hooks/useSupabaseData';
+import React, { useState } from 'react';
+import { supabase } from '../lib/supabase';
 
 export default function AddSchedule({ onClose, onSuccess }: { onClose: () => void, onSuccess?: () => void }) {
-  const { addSchedule } = useSchedules();
-
-  const [courseTitle, setCourseTitle] = useState('');
-  const [room, setRoom] = useState('');
-  const [dayOfWeek, setDayOfWeek] = useState<number>(1); // 1: Sen, 2: Sel, etc. (ISO 8601)
-  const [startTime, setStartTime] = useState('10:00');
-  const [endTime, setEndTime] = useState('11:40');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (errorMessage) setErrorMessage(null);
-  }, [dayOfWeek, startTime, endTime]);
-
-  const days = [
-    { id: 1, label: 'Sen' },
-    { id: 2, label: 'Sel' },
-    { id: 3, label: 'Rab' },
-    { id: 4, label: 'Kam' },
-    { id: 5, label: 'Jum' },
-    { id: 6, label: 'Sab' },
-    { id: 7, label: 'Min' },
-  ];
-
-  const handleSave = async () => {
-    if (!courseTitle || !startTime || !endTime) return;
-    
-    setIsSubmitting(true);
+  const [identity, setIdentity] = useState('');
+  const [logs, setLogs] = useState('');
+  const [status, setStatus] = useState('STANDBY');
+  const [parsedCourses, setParsedCourses] = useState<any[]>([]);
+  
+  const handlePaste = async () => {
     try {
-      await addSchedule({
-        course_name: courseTitle.trim(),
-        room: room.trim(),
-        day_of_week: dayOfWeek,
-        start_time: startTime,
-        end_time: endTime
-      });
-      onSuccess?.();
-      onClose();
+      const text = await navigator.clipboard.readText();
+      setLogs(text);
+    } catch (err) {
+      console.error('Failed to read clipboard contents: ', err);
+    }
+  };
+
+  const handleSync = () => {
+    setStatus("PROCESSING...");
+    try {
+      // Regex ini mendeteksi blok data antar mata kuliah, mengabaikan newline berantakan.
+      // Pola: (Kurikulum diabaikan) (Kode) (Nama MK) (Kelas) (SKS) (Jadwal + Dosen) (Kehadiran angka diabaikan)
+      const regex = /(?:SI\d{2})\s+(\d{9})\s+([\s\S]+?)\s+(SI-[A-Z0-9]+)\s+(\d)\s+([\s\S]+?)\s+(?:\d+)(?=\s+SI\d{2}\s+\d{9}|\s*$)/g;
+
+      const parsed = [];
+      let match;
+
+      while ((match = regex.exec(logs)) !== null) {
+        const kode_mk = match[1].trim();
+        // Gabungkan teks yang terpotong enter menjadi satu baris rapi
+        const nama_mk = match[2].replace(/\n/g, ' ').replace(/\s+/g, ' ').trim();
+        const kelas = match[3].trim();
+        const sks = parseInt(match[4].trim(), 10);
+        
+        // Pisahkan Jadwal dan Dosen dari regex grup ke-5
+        const jdRaw = match[5].trim();
+        const jdLines = jdRaw.split('\n').map((l: string) => l.trim()).filter((l: string) => l.length > 0);
+        
+        let dosen = "Unknown";
+        let jadwal = jdRaw;
+
+        // Dosen biasanya berada di baris teks paling bawah sebelum angka kehadiran
+        if (jdLines.length > 1) {
+          dosen = jdLines.pop() || "Unknown"; // Ambil baris terakhir sebagai nama dosen
+          jadwal = jdLines.join(' ').replace(/\s+/g, ' ').trim(); // Sisanya adalah jadwal & ruang
+        }
+
+        parsed.push({
+          kode_mk,
+          nama_mk,
+          kelas,
+          sks,
+          jadwal,
+          dosen
+        });
+      }
+
+      setParsedCourses(parsed);
+      setStatus(`SYNCED: ${parsed.length} RECORDS READY`);
+    } catch (error) {
+      console.error("Parsing error:", error);
+      setStatus("SYNC ERROR: Format gagal diproses");
+    }
+  };
+
+  const handleDeploy = async () => {
+    setStatus('DEPLOYING...');
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const mappedCourses = parsedCourses.map(course => ({
+        user_id: user.id,
+        code: course.kode_mk,
+        name: `${course.nama_mk} (${course.kelas})`,
+        credits: course.sks,
+        room: course.jadwal,
+        lecturer: course.dosen
+      }));
+
+      const { error } = await supabase.from('courses').insert(mappedCourses);
+      if (error) throw error;
+
+      setLogs('');
+      setParsedCourses([]);
+      setStatus('DEPLOY SUCCESS');
     } catch (error: any) {
       console.error(error);
-      setErrorMessage(error.message || 'Terjadi kesalahan saat menyimpan jadwal');
-    } finally {
-      setIsSubmitting(false);
+      setStatus(`ERROR: ${error.message}`);
     }
   };
 
@@ -64,124 +107,107 @@ export default function AddSchedule({ onClose, onSuccess }: { onClose: () => voi
 
       {/* Main Content Canvas */}
       <main className="flex-1 w-full max-w-xl mx-auto pt-24 px-6 pb-32 flex flex-col gap-8">
-        {/* Contextual Card */}
-        <section className="bg-surface-container-low rounded-[24px] p-4 flex gap-3 items-start">
-          <div className="w-12 h-12 rounded-lg bg-ink-on-dark flex items-center justify-center shrink-0">
-            <span className="material-symbols-outlined text-white" style={{ fontVariationSettings: "'FILL' 1" }}>event_repeat</span>
+        
+        {/* Header Text */}
+        <div className="flex flex-col gap-2">
+          <div className="inline-flex items-center gap-2 bg-primary/5 text-primary px-3 py-1.5 rounded-full w-fit mb-2 border border-primary/10">
+            <span className="material-symbols-outlined text-[16px]">database</span>
+            <span className="font-label-medium text-[11px] font-bold tracking-widest uppercase">System Integrations</span>
           </div>
-          <div className="flex flex-col gap-1">
-            <span className="font-label-medium text-label-medium text-on-surface">Jadwal kuliah berulang</span>
-            <p className="font-metadata text-metadata text-on-surface-variant">Atur hari dan jam kelas untuk mengaktifkan jadwal serta pengingat absensi</p>
-          </div>
-        </section>
+          <h2 className="font-h1-mobile text-[32px] text-primary font-extrabold tracking-tight leading-none">Datasources</h2>
+          <p className="font-metadata text-metadata text-on-surface-variant max-w-[80%]">Import raw academic schedules directly from the BIMA infrastructure.</p>
+        </div>
 
         {/* Form Container */}
-        <form className="flex flex-col gap-6 w-full" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+        <div className="bg-white/60 backdrop-blur-xl rounded-[32px] border border-white/50 p-6 flex flex-col gap-6 shadow-[0_8px_32px_-12px_rgba(0,0,0,0.08)]">
           
-          {/* Mata Kuliah Field */}
-          <div className="flex flex-col gap-2">
-            <label className="font-label-medium text-label-medium text-on-surface-variant pl-1">Mata kuliah</label>
-            <div className="relative flex items-center w-full min-h-[64px] border border-muted-divider rounded-[16px] bg-surface-container-lowest px-4 py-2 hover:border-outline transition-colors">
+          {/* Identity & Paste */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex items-center flex-1 min-h-[56px] border border-muted-divider/60 rounded-[20px] bg-white/80 px-4 py-2 shadow-sm focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
+              <span className="material-symbols-outlined text-on-surface-variant text-[20px] mr-2">tag</span>
               <input 
                 type="text"
-                value={courseTitle}
-                onChange={(e) => setCourseTitle(e.target.value)}
-                placeholder="Contoh: Pemrograman Web"
-                className="w-full h-full min-h-[48px] bg-transparent border-0 focus:ring-0 p-0 font-body text-body text-on-surface focus:outline-none"
-                required
+                value={identity}
+                onChange={(e) => setIdentity(e.target.value)}
+                placeholder="Datasource Identity (e.g. 2024 Semester 1)"
+                className="w-full bg-transparent border-0 focus:ring-0 p-0 font-body text-body text-primary font-medium flex-1 focus:outline-none placeholder:text-on-surface-variant/60 placeholder:font-normal"
               />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <label className="font-label-medium text-label-medium text-on-surface-variant pl-1">Ruangan</label>
-            <div className="relative flex items-center w-full min-h-[64px] border border-muted-divider rounded-[16px] bg-surface-container-lowest p-3 hover:border-outline transition-colors focus-within:border-primary">
-              <div className="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0 mr-3">
-                <span className="material-symbols-outlined text-on-surface-variant">location_on</span>
-              </div>
-              <input 
-                type="text"
-                value={room}
-                onChange={(e) => setRoom(e.target.value)}
-                placeholder="Contoh: Lab 2"
-                className="w-full bg-transparent border-0 focus:ring-0 p-0 font-body text-body text-on-surface flex-1 focus:outline-none"
-              />
-            </div>
-          </div>
-
-          {/* Hari Selection */}
-          <div className="flex flex-col gap-2">
-            <label className="font-label-medium text-label-medium text-on-surface-variant pl-1">Hari</label>
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-              {days.map(d => (
-                <button 
-                  key={d.id}
-                  onClick={() => setDayOfWeek(d.id)}
-                  className={`shrink-0 w-12 h-12 rounded-full font-label-medium text-label-medium transition-colors ${dayOfWeek === d.id ? 'bg-[#0D0D0D] text-white shadow-sm font-bold' : 'border border-muted-divider bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low'}`}
-                  type="button"
-                >
-                  {d.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Time Fields Row */}
-          <div className="flex items-center gap-3 w-full">
-            <div className="flex flex-col gap-2 flex-1">
-              <label className="font-label-medium text-label-medium text-on-surface-variant pl-1">Jam mulai</label>
-              <div className="relative flex items-center w-full h-[56px] border border-muted-divider rounded-[16px] bg-surface-container-lowest px-3 hover:border-outline transition-colors focus-within:border-primary">
-                <input 
-                  type="time" 
-                  value={startTime}
-                  onChange={e => setStartTime(e.target.value)}
-                  className="w-full bg-transparent border-0 focus:ring-0 p-0 font-body text-body text-on-surface focus:outline-none appearance-none" 
-                  required
-                />
-              </div>
             </div>
             
-            <div className="flex flex-col gap-2 flex-1">
-              <label className="font-label-medium text-label-medium text-on-surface-variant pl-1">Jam selesai</label>
-              <div className="relative flex items-center w-full h-[56px] border border-muted-divider rounded-[16px] bg-surface-container-lowest px-3 hover:border-outline transition-colors focus-within:border-primary">
-                <input 
-                  type="time" 
-                  value={endTime}
-                  onChange={e => setEndTime(e.target.value)}
-                  className="w-full bg-transparent border-0 focus:ring-0 p-0 font-body text-body text-on-surface focus:outline-none appearance-none"
-                  required
-                />
+            <button 
+              onClick={handlePaste}
+              className="h-[56px] px-6 bg-primary text-white font-label-medium text-label-medium rounded-[20px] flex items-center justify-center gap-2 hover:bg-black active:scale-[0.98] transition-all shrink-0 shadow-md shadow-primary/20"
+            >
+              <span className="material-symbols-outlined text-[20px]">content_paste</span>
+              PASTE LOGS
+            </button>
+          </div>
+
+          {/* Textarea - Terminal Style */}
+          <div className="relative flex flex-col w-full rounded-[24px] bg-[#0A0A0A] p-2 shadow-inner overflow-hidden border border-[#2A2A2A]">
+            <div className="flex items-center gap-2 px-3 pt-2 pb-3 border-b border-[#2A2A2A] mb-2">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
+                <div className="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                <div className="w-3 h-3 rounded-full bg-[#27C93F]"></div>
+              </div>
+              <span className="font-mono text-[10px] text-[#888888] ml-2 tracking-wider">raw_bima_dump.tsv</span>
+            </div>
+            <textarea 
+              value={logs}
+              onChange={(e) => setLogs(e.target.value)}
+              placeholder="Waiting for clipboard data..."
+              className="w-full h-[240px] bg-transparent border-0 focus:ring-0 px-3 font-mono text-[13px] text-[#4AF626] leading-relaxed placeholder:text-[#4AF626]/30 resize-none focus:outline-none"
+              spellCheck="false"
+            />
+          </div>
+
+          {/* Parsing Results Preview */}
+          {parsedCourses.length > 0 && (
+            <div className="flex flex-col gap-2 pt-2 border-t border-muted-divider/50">
+              <span className="font-metadata text-[11px] font-bold text-primary uppercase tracking-widest flex items-center gap-1.5">
+                <span className="material-symbols-outlined text-[16px] text-[#27C93F]">check_circle</span>
+                Data Extracted ({parsedCourses.length})
+              </span>
+              <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
+                {parsedCourses.map((c, i) => (
+                  <div key={i} className="min-w-[160px] max-w-[160px] bg-white border border-muted-divider/60 rounded-[16px] p-3 shadow-sm shrink-0">
+                    <p className="font-h2 text-[13px] text-primary truncate leading-tight mb-1">{c.nama_mk}</p>
+                    <p className="font-metadata text-[10px] text-on-surface-variant truncate"><span className="font-bold">Kelas:</span> {c.kelas} • {c.sks} SKS</p>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
-
-          {/* Helper Text */}
-          <div className="flex items-start gap-2 mt-2">
-            <span className="material-symbols-outlined text-[18px] text-on-surface-variant mt-0.5">notifications_active</span>
-            <p className="font-metadata text-metadata text-on-surface-variant leading-relaxed">Pengingat absensi dikirim 15 menit sebelum dan saat kelas dimulai.</p>
-          </div>
-        </form>
-      </main>
-
-      {/* Bottom Fixed Actions */}
-      <div className="fixed bottom-0 left-0 right-0 w-full bg-gradient-to-t from-surface-container-lowest via-surface-container-lowest to-transparent pt-6 pb-6 px-6 z-40">
-        <div className="max-w-xl mx-auto flex flex-col gap-2 items-center">
-          {errorMessage && (
-            <div className="w-full bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl text-sm font-body shadow-sm flex items-start gap-3">
-              <span className="material-symbols-outlined text-[20px] shrink-0 mt-0.5">error</span>
-              <p className="flex-1">{errorMessage}</p>
-            </div>
           )}
-          <button 
-            onClick={handleSave}
-            disabled={isSubmitting || !courseTitle.trim()}
-            className="w-full h-14 bg-[#0D0D0D] text-white rounded-full font-h2 text-h2 shadow-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center disabled:opacity-50 disabled:bg-gray-400 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? 'MENYIMPAN...' : 'SIMPAN JADWAL'}
-          </button>
-          <p className="font-metadata text-metadata text-on-surface-variant text-center opacity-80 mt-1">Waktu jadwal mengikuti zona waktu Asia/Jakarta.</p>
+
+          {/* Bottom Actions */}
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-2">
+            <div className="flex items-center gap-2 bg-surface-container-lowest px-4 py-2 rounded-full border border-muted-divider/60 shadow-inner">
+              <div className={`w-2 h-2 rounded-full ${status.includes('ERROR') ? 'bg-red-500 animate-pulse' : status.includes('SYNCED') ? 'bg-[#27C93F]' : status.includes('DEPLOY') ? 'bg-blue-500 animate-pulse' : 'bg-neutral-400'}`}></div>
+              <span className="font-mono text-[11px] text-on-surface-variant font-bold tracking-widest uppercase">{status}</span>
+            </div>
+            
+            <div className="flex gap-2 w-full sm:w-auto">
+              <button 
+                onClick={handleSync}
+                className="flex-1 sm:flex-none h-[48px] px-6 bg-white hover:bg-neutral-50 border border-muted-divider/60 text-primary font-label-medium text-[13px] font-bold rounded-[16px] transition-all shadow-sm active:scale-[0.98] flex items-center justify-center gap-2"
+              >
+                <span className="material-symbols-outlined text-[18px]">sync</span>
+                SYNC
+              </button>
+              <button 
+                onClick={handleDeploy}
+                className="flex-1 sm:flex-none h-[48px] px-8 bg-gradient-to-r from-primary to-black hover:opacity-90 text-white font-label-medium text-[13px] font-bold rounded-[16px] transition-all shadow-md active:scale-[0.98] disabled:opacity-50 disabled:grayscale flex items-center justify-center gap-2"
+                disabled={parsedCourses.length === 0}
+              >
+                <span className="material-symbols-outlined text-[18px]">cloud_upload</span>
+                DEPLOY
+              </button>
+            </div>
+          </div>
+
         </div>
-      </div>
+      </main>
     </div>
   );
 }

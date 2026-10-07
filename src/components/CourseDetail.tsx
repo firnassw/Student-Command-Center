@@ -1,182 +1,210 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
-import { getCourseTheme } from '../utils/courseTheme';
-import MeetingDetail from './MeetingDetail';
 import { format } from 'date-fns';
 import { id as localeId } from 'date-fns/locale';
+import MeetingDetail from './MeetingDetail';
 
-interface CourseDetailProps {
-  courseId: string;
-  onBack: () => void;
+interface Course {
+  id: string;
+  name: string;
+  code: string;
+  lecturer: string;
+  sks: number;
+  color: string;
 }
 
-export default function CourseDetail({ courseId, onBack }: CourseDetailProps) {
-  const [course, setCourse] = useState<any>(null);
+import { getCourseTheme } from '../utils/courseTheme';
+
+export default function CourseDetail({ courseId, onBack }: { courseId?: string, onBack?: () => void }) {
+  const params = useParams();
+  const id = courseId || params.id;
+  const navigate = useNavigate();
+  const [course, setCourse] = useState<Course | null>(null);
   const [meetings, setMeetings] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
 
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   useEffect(() => {
-    const fetchCourseData = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        // Fetch Course
-        const { data: courseData, error: courseError } = await supabase
-          .from('courses')
-          .select('*')
-          .eq('id', courseId)
-          .single();
+    fetchCourseAndMeetings();
+  }, [id]);
 
-        if (courseError) throw courseError;
-        setCourse(courseData);
+  const fetchCourseAndMeetings = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not logged in');
 
-        // Fetch Meetings with relational count
-        const { data: meetingsData, error: meetingsError } = await supabase
-          .from('meetings')
-          .select('*, notes(count), materials(count)')
-          .eq('course_id', courseId)
-          .order('meeting_number', { ascending: false });
-
-        if (meetingsError) throw meetingsError;
-        setMeetings(meetingsData || []);
-
-      } catch (err: any) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
+      // Fetch course
+      const { data: courseData, error: courseError } = await supabase
+        .from('courses')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (courseError) {
+        setErrorMsg(courseError.message + ' | ID: ' + id);
+        return;
       }
-    };
+      setCourse(courseData);
 
-    if (courseId) {
-      fetchCourseData();
+      // Fetch meetings with related notes and materials
+      const { data: meetingsData, error: meetingsError } = await supabase
+        .from('meetings')
+        .select(`
+          *,
+          notes(id),
+          materials(id)
+        `)
+        .eq('course_id', id)
+        .order('meeting_number', { ascending: false });
+
+      if (!meetingsError && meetingsData) {
+        // Map the data to include counts
+        const formattedMeetings = meetingsData.map(m => ({
+          ...m,
+          notesCount: m.notes ? m.notes.length : 0,
+          materialsCount: m.materials ? m.materials.length : 0
+        }));
+        setMeetings(formattedMeetings);
+      }
+    } catch (e: any) {
+      setErrorMsg(e.message);
+    } finally {
+      setIsLoading(false);
     }
-  }, [courseId]);
+  };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#FFFFFF] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <span className="animate-pulse text-gray-500 font-medium">Memuat...</span>
       </div>
     );
   }
 
-  if (error || !course) {
+  if (!course) {
     return (
-      <div className="fixed inset-0 z-50 bg-[#FFFFFF] flex flex-col items-center justify-center p-6">
-        <p className="text-error font-medium text-center mb-4">{error || 'Course not found'}</p>
-        <button onClick={onBack} className="px-6 py-2 bg-surface-container rounded-full text-on-surface font-label-medium">Kembali</button>
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
+        <p className="text-gray-500 mb-2">Mata kuliah tidak ditemukan. (ID: {id})</p>
+        {errorMsg && <p className="text-red-500 text-sm mb-4">Error: {errorMsg}</p>}
+        <button 
+          onClick={() => onBack ? onBack() : navigate('/courses')}
+          className="bg-black text-white px-6 py-2 rounded-full font-bold text-sm mt-4"
+        >
+          KEMBALI
+        </button>
       </div>
+    );
+  }
+
+  if (selectedMeetingId) {
+    return (
+      <MeetingDetail 
+        meetingId={selectedMeetingId} 
+        onBack={() => {
+          setSelectedMeetingId(null);
+          fetchCourseAndMeetings(); // Refresh data in case they added a note/material
+        }} 
+      />
     );
   }
 
   const theme = getCourseTheme(course.name);
 
-  if (selectedMeetingId) {
-    return <MeetingDetail meetingId={selectedMeetingId} onBack={() => setSelectedMeetingId(null)} />;
-  }
-
   return (
-    <div className="fixed inset-0 z-50 bg-[#FFFFFF] flex flex-col antialiased animate-in slide-in-from-right sm:fade-in duration-300 overflow-y-auto overflow-x-hidden">
+    <div className="bg-white min-h-screen w-full flex flex-col font-sans">
       {/* TopAppBar */}
-      <header className="w-full top-0 sticky bg-[#FFFFFF]/90 backdrop-blur-md z-40 border-b border-[#EBEAE6]">
-        <div className="flex justify-between items-center px-4 md:px-8 py-3 w-full max-w-2xl mx-auto">
-          <button 
-            onClick={onBack} 
-            className="text-on-surface-variant hover:text-primary transition-colors flex items-center justify-center p-2 rounded-full hover:bg-surface-container-low -ml-2"
-          >
-            <span className="material-symbols-outlined text-[24px]">arrow_back</span>
-          </button>
-          <h1 className="font-h1-mobile text-[#191B1F] font-extrabold flex-1 text-center pr-8">Mata Kuliah</h1>
-        </div>
+      <header className="fixed top-0 w-full z-50 bg-white flex items-center justify-between px-4 h-16 max-w-2xl mx-auto left-0 right-0">
+        <button 
+          onClick={() => onBack ? onBack() : navigate('/courses')}
+          aria-label="Back" 
+          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors active:scale-95 text-[#141414]"
+        >
+          <span className="material-symbols-outlined text-[24px]">arrow_back</span>
+        </button>
+        <h1 className="font-headline font-bold text-lg text-[#141414] truncate px-4 text-center w-full">Mata Kuliah</h1>
+        <button 
+          aria-label="More options" 
+          className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors active:scale-95 text-[#141414]"
+        >
+          <span className="material-symbols-outlined text-[24px]">more_vert</span>
+        </button>
       </header>
 
-      <main className="flex-grow w-full max-w-2xl mx-auto px-4 pt-6 pb-32 flex flex-col gap-8">
+      <main className="pt-20 px-6 max-w-2xl mx-auto space-y-8 w-full pb-10">
         {/* Course Header Card */}
         <section className={`rounded-[24px] p-6 shadow-sm flex flex-col gap-4 ${theme.bgColor}`}>
-          <div className="w-12 h-12 rounded-xl bg-ink-on-dark text-on-primary flex items-center justify-center shadow-sm">
-            <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>{theme.icon}</span>
+          <div className="w-12 h-12 rounded-[16px] bg-[#141414] text-white flex items-center justify-center shadow-sm">
+            <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>
+              {theme.icon}
+            </span>
           </div>
           <div>
-            <h2 className="font-h1 text-[24px] font-bold text-on-background mb-1">{course.name}</h2>
-            <p className="font-metadata text-[13px] text-on-surface-variant">
-              3 SKS · Pak Budi · {course.room || 'Lab 2'}
+            <h2 className="font-headline font-bold text-2xl text-[#141414] mb-1">{course.name}</h2>
+            <p className="font-metadata text-sm text-[#141414]/70 font-semibold tracking-wide">
+              {course.sks} SKS · {course.lecturer || 'Belum ada dosen'}
             </p>
           </div>
         </section>
 
         {/* Meetings Section */}
-        <section className="flex flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <h3 className="font-h2 text-[18px] font-bold text-on-background">Pertemuan</h3>
-            <span className="bg-surface-container-high text-on-surface px-2.5 py-0.5 rounded-full font-metadata text-[12px] font-bold">
-              {meetings.length}
-            </span>
-          </div>
+        <section className="space-y-5">
+            <div className="flex items-center gap-3">
+              <h3 className="font-headline font-bold text-xl text-[#141414]">Pertemuan</h3>
+              <span className="bg-gray-100 text-[#141414] px-2 py-0.5 rounded-full font-metadata font-bold text-xs">
+                {meetings.length}
+              </span>
+            </div>
+            
+            <div className="space-y-4">
+              {meetings.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-gray-500 italic text-sm">Belum ada pertemuan untuk mata kuliah ini.</p>
+                </div>
+              ) : meetings.map((meeting, index) => {
+                const meetingDate = meeting.date ? new Date(meeting.date) : new Date();
+                const formattedDate = format(meetingDate, 'EEEE, d MMMM', { locale: localeId });
+                // We'll just assume the most recent meeting is active (index === 0) for visual flair
+                const isActive = index === 0;
 
-          <div className="flex flex-col gap-3">
-            {meetings.length === 0 ? (
-              <div className="bg-surface-container-lowest border border-dashed border-muted-divider rounded-xl p-6 text-center text-on-surface-variant font-metadata">
-                Belum ada pertemuan untuk mata kuliah ini.
-              </div>
-            ) : (
-              meetings.map((meeting) => {
-                const notesCount = meeting.notes?.[0]?.count || 0;
-                const materialsCount = meeting.materials?.[0]?.count || 0;
-                const meetingDate = new Date(meeting.date);
-                
                 return (
-                  <div 
-                    key={meeting.id} 
-                    onClick={() => setSelectedMeetingId(meeting.id)}
-                    className="flex items-start gap-4 p-4 rounded-[20px] bg-surface-container-lowest hover:bg-surface-container-low hover:opacity-90 transition-all cursor-pointer border border-muted-divider shadow-sm"
-                  >
-                    <div className={`w-12 h-12 shrink-0 rounded-full ${theme.bgColor} flex items-center justify-center text-ink-on-dark font-display-numeric font-bold text-[18px]`}>
-                      {meeting.meeting_number}
+                <div 
+                  key={meeting.id}
+                  onClick={() => setSelectedMeetingId(meeting.id)}
+                  className="flex items-start gap-4 p-4 rounded-xl bg-white hover:bg-gray-50 transition-colors cursor-pointer border border-gray-100 shadow-sm hover:border-gray-300"
+                >
+                  <div className={`w-12 h-12 shrink-0 rounded-[16px] ${isActive ? theme.bgColor : 'bg-gray-100'} flex items-center justify-center text-[#141414] font-headline font-bold text-xl`}>
+                    {meeting.meeting_number || (meetings.length - index)}
+                  </div>
+                  <div className="flex-1 min-w-0 py-1">
+                    <div className="flex justify-between items-start mb-1">
+                      <h4 className="font-headline font-bold text-[17px] text-[#141414] truncate">{meeting.topic || `Pertemuan ${meeting.meeting_number || (meetings.length - index)}`}</h4>
+                      <span className="font-metadata font-semibold text-xs text-gray-400 whitespace-nowrap ml-2 mt-1">{formattedDate}</span>
                     </div>
                     
-                    <div className="flex-1 min-w-0 pt-0.5">
-                      <div className="flex justify-between items-start mb-1">
-                        <h4 className="font-h2 text-[16px] font-bold text-on-background truncate max-w-[200px] sm:max-w-[300px]">
-                          {meeting.topic || `Pertemuan ${meeting.meeting_number}`}
-                        </h4>
-                        <span className="font-metadata text-[11px] font-semibold text-on-surface-variant whitespace-nowrap ml-2 mt-1 uppercase tracking-wider">
-                          {format(meetingDate, 'EEEE, d MMM', { locale: localeId })}
+                    {meeting.notesCount > 0 || meeting.materialsCount > 0 ? (
+                      <div className="flex items-center gap-3 text-gray-500 font-medium text-xs mt-2">
+                        <span className="flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[16px]">description</span> 
+                          {meeting.notesCount} catatan
+                        </span>
+                        <span className="w-1 h-1 rounded-full bg-gray-300"></span>
+                        <span className="flex items-center gap-1.5">
+                          <span className="material-symbols-outlined text-[16px]">folder_open</span> 
+                          {meeting.materialsCount} materi
                         </span>
                       </div>
-                      
-                      {notesCount === 0 && materialsCount === 0 ? (
-                        <div className="flex items-center gap-3 text-outline font-metadata text-[13px] mt-2">
-                          <span className="italic">Belum ada catatan</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-3 text-on-surface-variant font-metadata text-[13px] mt-2">
-                          {notesCount > 0 && (
-                            <span className="flex items-center gap-1 font-medium">
-                              <span className="material-symbols-outlined text-[16px]">description</span> 
-                              1 catatan
-                            </span>
-                          )}
-                          
-                          {notesCount > 0 && materialsCount > 0 && (
-                            <span className="w-1 h-1 rounded-full bg-muted-divider"></span>
-                          )}
-                          
-                          {materialsCount > 0 && (
-                            <span className="flex items-center gap-1 font-medium">
-                              <span className="material-symbols-outlined text-[16px]">folder_open</span> 
-                              {materialsCount} materi
-                            </span>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    ) : (
+                      <div className="flex items-center gap-3 text-gray-400 font-medium text-xs mt-2">
+                        <span className="italic">Belum ada catatan</span>
+                      </div>
+                    )}
                   </div>
-                );
-              })
-            )}
-          </div>
+                </div>
+              )})}
+            </div>
         </section>
       </main>
     </div>

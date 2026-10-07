@@ -20,6 +20,11 @@ export default function Tasks() {
   const [activeTab, setActiveTab] = useState<FilterTab>('semua');
   const [showAddTask, setShowAddTask] = useState(false);
 
+  // Filter States
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [selectedPriority, setSelectedPriority] = useState<string | 'all'>('all');
+  const [selectedCourse, setSelectedCourse] = useState<string | 'all'>('all');
+
   useEffect(() => {
     fetchTasks();
   }, []);
@@ -64,11 +69,26 @@ export default function Tasks() {
   const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
       const isCompleted = task.status === 'completed';
-      if (activeTab === 'belum') return !isCompleted;
-      if (activeTab === 'selesai') return isCompleted;
-      return true; // 'semua'
+      
+      // Tab filter
+      if (activeTab === 'belum' && isCompleted) return false;
+      if (activeTab === 'selesai' && !isCompleted) return false;
+      
+      // Priority filter
+      if (selectedPriority !== 'all' && task.priority !== selectedPriority) return false;
+      
+      // Course filter
+      const courseName = task.course?.name || 'Umum';
+      if (selectedCourse !== 'all' && courseName !== selectedCourse) return false;
+
+      return true;
     });
-  }, [tasks, activeTab]);
+  }, [tasks, activeTab, selectedPriority, selectedCourse]);
+
+  const uniqueCourses = useMemo(() => {
+    const courses = new Set(tasks.map(t => t.course?.name).filter(Boolean) as string[]);
+    return Array.from(courses);
+  }, [tasks]);
 
   // Helper to format date cleanly
   const formatDeadline = (isoString: string) => {
@@ -89,7 +109,11 @@ export default function Tasks() {
             <h1 className="font-headline font-bold text-[32px] leading-tight text-base-ink tracking-tight">
               Tugas
             </h1>
-            <button aria-label="Filter tugas" className="w-10 h-10 rounded-full flex items-center justify-center text-base-dark hover:bg-neutral-100 active:scale-95 transition-all">
+            <button 
+              onClick={() => setShowFilterModal(true)}
+              aria-label="Filter tugas" 
+              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 ${selectedPriority !== 'all' || selectedCourse !== 'all' ? 'bg-[#141414] text-white shadow-sm' : 'text-base-dark hover:bg-neutral-100'}`}
+            >
               <span className="material-symbols-outlined text-[24px]">tune</span>
             </button>
           </header>
@@ -228,6 +252,99 @@ export default function Tasks() {
         />
       )}
 
+      {/* Filter Modal */}
+      {showFilterModal && (
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-2xl mx-auto rounded-t-[24px] p-6 pb-10 shadow-xl animate-in slide-in-from-bottom duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-headline font-bold text-xl text-[#141414]">Filter Tugas</h3>
+              <button onClick={() => setShowFilterModal(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Prioritas Filter */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Prioritas</label>
+                <div className="flex flex-wrap gap-2">
+                  <button 
+                    onClick={() => setSelectedPriority('all')}
+                    className={`px-4 py-2 rounded-full font-bold text-xs transition-colors border ${selectedPriority === 'all' ? 'bg-[#141414] text-white border-[#141414]' : 'bg-white text-[#141414] border-gray-200 hover:bg-gray-50'}`}
+                  >
+                    Semua
+                  </button>
+                  <button 
+                    onClick={() => setSelectedPriority('high')}
+                    className={`px-4 py-2 rounded-full font-bold text-xs transition-colors border ${selectedPriority === 'high' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                  >
+                    Tinggi
+                  </button>
+                  <button 
+                    onClick={() => setSelectedPriority('medium')}
+                    className={`px-4 py-2 rounded-full font-bold text-xs transition-colors border ${selectedPriority === 'medium' ? 'bg-orange-50 text-orange-600 border-orange-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                  >
+                    Sedang
+                  </button>
+                  <button 
+                    onClick={() => setSelectedPriority('low')}
+                    className={`px-4 py-2 rounded-full font-bold text-xs transition-colors border ${selectedPriority === 'low' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                  >
+                    Rendah
+                  </button>
+                </div>
+              </div>
+
+              {/* Mata Kuliah Filter */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Mata Kuliah</label>
+                <div className="flex flex-wrap gap-2">
+                  <button 
+                    onClick={() => setSelectedCourse('all')}
+                    className={`px-4 py-2 rounded-full font-bold text-xs transition-colors border ${selectedCourse === 'all' ? 'bg-[#141414] text-white border-[#141414]' : 'bg-white text-[#141414] border-gray-200 hover:bg-gray-50'}`}
+                  >
+                    Semua
+                  </button>
+                  {uniqueCourses.map(course => (
+                    <button 
+                      key={course}
+                      onClick={() => setSelectedCourse(course)}
+                      className={`px-4 py-2 rounded-full font-bold text-xs transition-colors border ${selectedCourse === course ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                    >
+                      {course}
+                    </button>
+                  ))}
+                  <button 
+                    onClick={() => setSelectedCourse('Umum')}
+                    className={`px-4 py-2 rounded-full font-bold text-xs transition-colors border ${selectedCourse === 'Umum' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                  >
+                    Umum
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-8 flex gap-3">
+              <button 
+                onClick={() => {
+                  setSelectedPriority('all');
+                  setSelectedCourse('all');
+                }}
+                className="flex-1 py-3.5 bg-gray-100 text-gray-700 rounded-full font-bold text-sm hover:bg-gray-200 transition-all"
+              >
+                RESET
+              </button>
+              <button 
+                onClick={() => setShowFilterModal(false)}
+                className="flex-[2] py-3.5 bg-[#141414] text-white rounded-full font-bold text-sm hover:bg-black transition-all shadow-md"
+              >
+                TERAPKAN FILTER
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Global Bottom Navbar (Full Width) */}
       <nav className="fixed bottom-0 left-0 right-0 w-full bg-[#FFFFFF] border-t border-[#EBEAE6] z-50 pb-safe">
         <div className="flex justify-around items-center px-4 py-2 max-w-4xl mx-auto w-full">
@@ -262,7 +379,10 @@ export default function Tasks() {
           </button>
 
           {/* Item 4 (Inactive) - KELAS */}
-          <button className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform">
+          <button 
+            className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform"
+            onClick={() => navigate('/courses')}
+          >
             <div className="flex items-center justify-center text-[#848484] rounded-[16px] w-12 h-8 mb-1">
               <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>class</span>
             </div>
@@ -270,7 +390,7 @@ export default function Tasks() {
           </button>
 
           {/* Item 5 (Inactive) - PROYEK */}
-          <button className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform">
+          <button className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform" onClick={() => navigate('/projects')}>
             <div className="flex items-center justify-center text-[#848484] rounded-[16px] w-12 h-8 mb-1">
               <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>folder_open</span>
             </div>

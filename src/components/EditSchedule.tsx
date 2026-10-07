@@ -1,42 +1,26 @@
 import React, { useState, useEffect } from 'react';
-import { useSchedules, Schedule } from '../hooks/useSupabaseData';
+import { supabase } from '../lib/supabase';
+import { useCourses } from '../hooks/useSupabaseData';
 
-export default function EditSchedule({ schedule, color, icon, onClose, onSuccess }: { schedule: Schedule, color: string, icon: string, onClose: () => void, onSuccess?: () => void }) {
-  const { updateSchedule, deleteSchedule } = useSchedules();
+export default function EditSchedule({ schedule, color, icon, onClose, onSuccess }: { schedule: any, color: string, icon: string, onClose: () => void, onSuccess?: () => void }) {
+  const { deleteCourse } = useCourses();
 
-  const [room, setRoom] = useState(schedule.course?.room || '');
-  const [dayOfWeek, setDayOfWeek] = useState<number>(schedule.day_of_week);
-  const [startTime, setStartTime] = useState(schedule.start_time.substring(0, 5));
-  const [endTime, setEndTime] = useState(schedule.end_time.substring(0, 5));
+  const [room, setRoom] = useState(schedule.room || '');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (errorMessage) setErrorMessage(null);
-  }, [dayOfWeek, startTime, endTime, room]);
-
-  const days = [
-    { id: 1, label: 'Sen' },
-    { id: 2, label: 'Sel' },
-    { id: 3, label: 'Rab' },
-    { id: 4, label: 'Kam' },
-    { id: 5, label: 'Jum' },
-    { id: 6, label: 'Sab' },
-    { id: 7, label: 'Min' },
-  ];
+  }, [room]);
 
   const handleSave = async () => {
-    if (!startTime || !endTime) return;
+    if (!room.trim()) return;
     
     setIsSubmitting(true);
     try {
-      await updateSchedule(schedule.id, schedule.course_id, {
-        room: room.trim(),
-        day_of_week: dayOfWeek,
-        start_time: startTime,
-        end_time: endTime
-      });
+      const { error } = await supabase.from('courses').update({ room: room.trim() }).eq('id', schedule.id);
+      if (error) throw error;
       onSuccess?.();
       onClose();
     } catch (error: any) {
@@ -48,10 +32,10 @@ export default function EditSchedule({ schedule, color, icon, onClose, onSuccess
   };
 
   const handleDelete = async () => {
-    if (window.confirm('Yakin ingin menghapus jadwal ini?')) {
+    if (window.confirm('Yakin ingin menghapus kelas ini? (Semua tugas terkait akan ikut terhapus)')) {
       setIsDeleting(true);
       try {
-        await deleteSchedule(schedule.id);
+        await deleteCourse(schedule.id);
         onSuccess?.();
         onClose();
       } catch (error: any) {
@@ -86,7 +70,7 @@ export default function EditSchedule({ schedule, color, icon, onClose, onSuccess
           </div>
           <div className="flex flex-col gap-1 w-full pr-2">
             <span className="font-label-medium text-label-medium text-on-surface-variant">Mata Kuliah</span>
-            <h2 className="font-h2 text-h2 text-primary">{schedule.course?.name || 'Unknown Course'}</h2>
+            <h2 className="font-h2 text-h2 text-primary">{schedule.name || 'Unknown Course'}</h2>
           </div>
         </section>
 
@@ -94,7 +78,7 @@ export default function EditSchedule({ schedule, color, icon, onClose, onSuccess
         <form className="flex flex-col gap-6 w-full" onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
           
           <div className="flex flex-col gap-2">
-            <label className="font-label-medium text-label-medium text-on-surface-variant pl-1">Ruangan</label>
+            <label className="font-label-medium text-label-medium text-on-surface-variant pl-1">Jadwal & Ruangan</label>
             <div className="relative flex items-center w-full min-h-[64px] border border-muted-divider rounded-[16px] bg-surface-container-lowest p-3 hover:border-outline transition-colors focus-within:border-primary">
               <div className="w-10 h-10 rounded-lg bg-surface-container-low flex items-center justify-center shrink-0 mr-3">
                 <span className="material-symbols-outlined text-on-surface-variant">location_on</span>
@@ -103,59 +87,13 @@ export default function EditSchedule({ schedule, color, icon, onClose, onSuccess
                 type="text"
                 value={room}
                 onChange={(e) => setRoom(e.target.value)}
-                placeholder="Contoh: Lab 2"
+                placeholder="Contoh: Rabu 10:00 - 11:40 Lab 2"
                 className="w-full bg-transparent border-0 focus:ring-0 p-0 font-body text-body text-on-surface flex-1 focus:outline-none"
               />
             </div>
-          </div>
-
-          {/* Hari Selection */}
-          <div className="flex flex-col gap-2">
-            <label className="font-label-medium text-label-medium text-on-surface-variant pl-1">Hari</label>
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-1">
-              {days.map((d) => (
-                <button
-                  key={d.id}
-                  type="button"
-                  onClick={() => setDayOfWeek(d.id)}
-                  className={`min-w-[48px] h-[48px] rounded-full flex flex-col items-center justify-center font-label-medium text-label-medium transition-all shrink-0 ${
-                    dayOfWeek === d.id 
-                      ? 'bg-[#0D0D0D] text-white shadow-sm font-bold' 
-                      : 'bg-surface-container-lowest border border-muted-divider text-on-surface hover:bg-surface-container-low'
-                  }`}
-                >
-                  {d.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Jam Selection Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-2">
-              <label className="font-label-medium text-label-medium text-on-surface-variant pl-1">Jam mulai</label>
-              <div className="relative flex items-center w-full min-h-[64px] border border-muted-divider rounded-[16px] bg-surface-container-lowest px-4 py-2 hover:border-outline transition-colors focus-within:border-primary">
-                <input 
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full bg-transparent border-0 focus:ring-0 p-0 font-body text-body text-on-surface text-center focus:outline-none"
-                  required
-                />
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label className="font-label-medium text-label-medium text-on-surface-variant pl-1">Jam selesai</label>
-              <div className="relative flex items-center w-full min-h-[64px] border border-muted-divider rounded-[16px] bg-surface-container-lowest px-4 py-2 hover:border-outline transition-colors focus-within:border-primary">
-                <input 
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full bg-transparent border-0 focus:ring-0 p-0 font-body text-body text-on-surface text-center focus:outline-none"
-                  required
-                />
-              </div>
-            </div>
+            <p className="text-xs text-on-surface-variant pl-1 mt-1">
+              Format: <b>Hari HH:MM - HH:MM Ruangan</b> (Pastikan ejaan hari benar, misal "Rabu")
+            </p>
           </div>
 
         </form>
@@ -172,7 +110,7 @@ export default function EditSchedule({ schedule, color, icon, onClose, onSuccess
           )}
           <button 
             onClick={handleSave}
-            disabled={isSubmitting || isDeleting}
+            disabled={isSubmitting || isDeleting || !room.trim()}
             className="w-full h-14 bg-[#0D0D0D] text-white rounded-full font-h2 text-h2 shadow-sm hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? 'MENYIMPAN...' : 'SIMPAN PERUBAHAN'}

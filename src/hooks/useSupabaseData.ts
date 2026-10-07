@@ -69,6 +69,13 @@ export function useCourses() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Delete associated tasks first because schema uses 'on delete set null'
+    await supabase
+      .from('tasks')
+      .delete()
+      .eq('course_id', id)
+      .eq('user_id', user.id);
+
     const { error } = await supabase
       .from('courses')
       .delete()
@@ -112,7 +119,7 @@ export function useSchedules() {
     setLoading(false);
   };
 
-  const addSchedule = async (scheduleInput: { course_name: string, room: string, day_of_week: number, start_time: string, end_time: string }) => {
+  const addSchedule = async (scheduleInput: { course_name: string, room: string, lecturer?: string, day_of_week: number, start_time: string, end_time: string }) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
@@ -151,14 +158,18 @@ export function useSchedules() {
 
     if (existingCourse) {
       courseId = existingCourse.id;
-      if (scheduleInput.room) {
-        const { error: updateError } = await supabase.from('courses').update({ room: scheduleInput.room }).eq('id', courseId);
-        if (updateError) throw new Error(`Gagal update ruangan: ${updateError.message}`);
+      if (scheduleInput.room || scheduleInput.lecturer) {
+        const updates: any = {};
+        if (scheduleInput.room) updates.room = scheduleInput.room;
+        if (scheduleInput.lecturer) updates.lecturer = scheduleInput.lecturer;
+        
+        const { error: updateError } = await supabase.from('courses').update(updates).eq('id', courseId);
+        if (updateError) throw new Error(`Gagal update ruangan/dosen: ${updateError.message}`);
       }
     } else {
       const { data: newCourse, error: insertError } = await supabase
         .from('courses')
-        .insert([{ name: scheduleInput.course_name, room: scheduleInput.room, user_id: user.id }])
+        .insert([{ name: scheduleInput.course_name, room: scheduleInput.room, lecturer: scheduleInput.lecturer, user_id: user.id }])
         .select()
         .single();
       

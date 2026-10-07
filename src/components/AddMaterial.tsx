@@ -16,6 +16,7 @@ export default function AddMaterial({ meetingId, courseName, meetingNumber, onBa
   const [file, setFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const theme = getCourseTheme(courseName);
@@ -23,6 +24,24 @@ export default function AddMaterial({ meetingId, courseName, meetingNumber, onBa
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setFile(e.target.files[0]);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setFile(e.dataTransfer.files[0]);
     }
   };
 
@@ -196,7 +215,14 @@ export default function AddMaterial({ meetingId, courseName, meetingNumber, onBa
                 
                 <div 
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full bg-surface-container border border-dashed border-outline-variant hover:border-primary hover:bg-surface-container-high transition-colors rounded-[16px] p-6 flex flex-col items-center justify-center cursor-pointer gap-2"
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`w-full border border-dashed rounded-[16px] p-6 flex flex-col items-center justify-center cursor-pointer gap-2 transition-colors ${
+                    isDragging 
+                      ? 'border-primary bg-primary/5' 
+                      : 'bg-surface-container border-outline-variant hover:border-primary hover:bg-surface-container-high'
+                  }`}
                 >
                   <span className="material-symbols-outlined text-[32px] text-on-surface-variant">
                     {file ? 'description' : 'cloud_upload'}

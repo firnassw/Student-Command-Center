@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { useSchedules, useTasks } from '../hooks/useSupabaseData';
+import { useCourses, useTasks } from '../hooks/useSupabaseData';
 import { supabase } from '../lib/supabase';
 import { toZonedTime, format } from 'date-fns-tz';
 import LogoutModal from './LogoutModal';
@@ -53,7 +53,7 @@ import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { schedules, loading: schedulesLoading, fetchSchedules } = useSchedules();
+  const { courses, loading: coursesLoading, fetchCourses } = useCourses();
   const { tasks, loading: tasksLoading } = useTasks();
   const [userName, setUserName] = React.useState('Pelajar');
   const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
@@ -72,9 +72,10 @@ export default function Dashboard() {
 
   const todaySchedules = useMemo(() => {
     const today = toZonedTime(new Date(), 'Asia/Jakarta').getDay();
-    const todayDayOfWeek = today === 0 ? 7 : today;
-    return schedules.filter(s => s.day_of_week === todayDayOfWeek);
-  }, [schedules]);
+    const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const namaHari = days[today];
+    return courses.filter(c => c.room?.toLowerCase().includes(namaHari.toLowerCase()));
+  }, [courses]);
 
   const nearestTask = tasks.length > 0 ? tasks[0] : null;
 
@@ -138,55 +139,54 @@ export default function Dashboard() {
         <section>
           <h2 className="font-h2 text-h2 text-primary mb-4">Jadwal Hari Ini</h2>
           <div className="flex flex-col gap-4">
-            {schedulesLoading ? (
+            {coursesLoading ? (
               <p className="text-on-surface-variant text-sm py-4">Memuat jadwal...</p>
             ) : todaySchedules.length === 0 ? (
               <div className="bg-surface-container-low rounded-[24px] p-6 text-center border border-dashed border-muted-divider w-full">
                 <p className="text-on-surface-variant font-label-medium">No classes today</p>
               </div>
             ) : (
-              todaySchedules.map((schedule) => {
-                const theme = getCourseTheme(schedule.course?.name);
+              todaySchedules.map((course) => {
+                const theme = getCourseTheme(course.name);
                 return (
-                <div key={schedule.id} className="flex gap-4 items-stretch w-full">
-                  {/* Time Column */}
-                  <div className="flex flex-col items-end w-12 shrink-0 py-1">
-                    <span className="font-label-medium text-label-medium text-primary">{formatTimeJakarta(schedule.start_time)}</span>
-                    <div className="flex-grow w-px bg-muted-divider my-2 mr-1"></div>
-                    <span className="font-metadata text-metadata text-on-surface-variant">{formatTimeJakarta(schedule.end_time)}</span>
-                  </div>
+                  <div key={course.id} className="flex gap-4 items-stretch w-full">
+                    {/* Time Column (Extracted from string if possible, or omit) */}
+                    <div className="flex flex-col items-end w-12 shrink-0 py-1">
+                      <span className="font-label-medium text-label-medium text-primary text-right">{course.room?.split(' ')[1] || '-'}</span>
+                    </div>
 
-                  {/* Content Card */}
-                  <div className={`${theme.bgColor} rounded-[24px] p-4 flex-grow relative overflow-hidden w-full`}>
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="bg-ink-on-dark text-on-primary w-12 h-12 flex items-center justify-center rounded-[16px] shrink-0">
-                        <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>{theme.icon}</span>
+                    {/* Content Card */}
+                    <div className={`${theme.bgColor} rounded-[24px] p-4 flex-grow relative overflow-hidden w-full shadow-sm`}>
+                      <div className="flex items-start gap-3 mb-3">
+                        <div className="bg-ink-on-dark text-on-primary w-12 h-12 flex items-center justify-center rounded-[16px] shrink-0 shadow-sm">
+                          <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>{theme.icon}</span>
+                        </div>
+                        <div className="pt-1">
+                          <h3 className="font-h2 text-h2 text-primary leading-snug">{course.name || 'Unknown Course'}</h3>
+                          <p className="font-metadata text-metadata text-status-safe-fg mt-1 text-xs truncate max-w-[150px]">{course.room?.replace(/^[A-Za-z]+\s+\d{2}:\d{2}\s*-\s*\d{2}:\d{2}\s*/, '') || 'Ruang Kelas'}</p>
+                        </div>
                       </div>
-                      <div className="pt-1">
-                        <h3 className="font-h2 text-h2 text-primary">{schedule.course?.name || 'Unknown Course'}</h3>
-                        <p className="font-metadata text-metadata text-status-safe-fg mt-1">Ruang Kelas</p>
+                      
+                      <div className="flex gap-2">
+                        <button 
+                          onClick={() => window.open('https://spada.upnyk.ac.id/login/index.php', '_blank', 'noopener,noreferrer')}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-muted-divider bg-white/60 backdrop-blur-sm font-metadata text-metadata font-semibold text-primary hover:bg-white active:scale-95 transition-all shadow-sm"
+                        >
+                          <span className="material-symbols-outlined text-[16px]" data-icon="open_in_new">open_in_new</span>
+                          ABSEN
+                        </button>
+                        <button 
+                          onClick={() => setActiveNote({ course_id: course.id, course: { name: course.name } })}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-muted-divider bg-white/60 backdrop-blur-sm font-metadata text-metadata font-semibold text-primary hover:bg-white active:scale-95 transition-all shadow-sm"
+                        >
+                          <span className="material-symbols-outlined text-[16px]" data-icon="edit_note">edit_note</span>
+                          CATAT
+                        </button>
                       </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <button 
-                        onClick={() => window.open('https://spada.upnyk.ac.id/login/index.php', '_blank', 'noopener,noreferrer')}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-muted-divider bg-white/50 backdrop-blur-sm font-metadata text-metadata text-primary hover:bg-white transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[14px]" data-icon="open_in_new">open_in_new</span>
-                        ABSEN
-                      </button>
-                      <button 
-                        onClick={() => setActiveNote(schedule)}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-muted-divider bg-white/50 backdrop-blur-sm font-metadata text-metadata text-primary hover:bg-white transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[14px]" data-icon="edit_note">edit_note</span>
-                        CATAT
-                      </button>
                     </div>
                   </div>
-                </div>
-              )})
+                );
+              })
             )}
           </div>
         </section>
@@ -298,7 +298,7 @@ export default function Dashboard() {
           course_name={activeNote.course?.name || 'Unknown Course'}
           date={new Date()}
           onClose={() => setActiveNote(null)}
-          onSuccess={() => fetchSchedules()}
+          onSuccess={() => fetchCourses()}
         />
       )}
     </div>

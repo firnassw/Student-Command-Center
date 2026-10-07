@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { useSchedules } from '../hooks/useSupabaseData';
+import { useCourses } from '../hooks/useSupabaseData';
 import { supabase } from '../lib/supabase';
 import { toZonedTime, format } from 'date-fns-tz';
 import { startOfWeek, addDays, subDays } from 'date-fns';
@@ -22,7 +22,7 @@ const formatTimeJakarta = (timeStr: string) => {
 
 export default function Schedules() {
   const navigate = useNavigate();
-  const { schedules, loading, fetchSchedules } = useSchedules();
+  const { courses, loading, fetchCourses } = useCourses();
   const [viewMode, setViewMode] = useState<'today' | 'weekly'>('weekly');
   const [selectedDate, setSelectedDate] = useState(() => toZonedTime(new Date(), timeZone));
   const [showAddModal, setShowAddModal] = useState(false);
@@ -36,8 +36,11 @@ export default function Schedules() {
 
   const filteredSchedules = useMemo(() => {
     const targetDayOfWeek = parseInt(format(selectedDate, 'i', { timeZone }), 10);
-    return schedules.filter(s => s.day_of_week === targetDayOfWeek);
-  }, [schedules, selectedDate]);
+    const dayNamesFull = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+    const selectedDayName = dayNamesFull[targetDayOfWeek === 7 ? 0 : targetDayOfWeek]; // 'i' is 1-7, where 7 is Sunday.
+    
+    return courses.filter(c => c.room?.toLowerCase().includes(selectedDayName.toLowerCase()));
+  }, [courses, selectedDate]);
 
   const dayNames = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
 
@@ -138,14 +141,14 @@ export default function Schedules() {
               </p>
             </div>
           ) : (
-            filteredSchedules.map((schedule) => {
-              const theme = getCourseTheme(schedule.course?.name);
+            filteredSchedules.map((course) => {
+              const theme = getCourseTheme(course.name);
 
               if (viewMode === 'weekly') {
                 return (
                   <article 
-                    key={schedule.id} 
-                    onClick={() => setSelectedCourseId(schedule.course_id)}
+                    key={course.id} 
+                    onClick={() => setSelectedCourseId(course.id)}
                     className={`${theme.bgColor} rounded-[24px] p-4 flex gap-4 items-start w-full cursor-pointer hover:opacity-90 transition-opacity`}
                   >
                     <div className="w-[40px] h-[40px] bg-ink-on-dark rounded-xl flex items-center justify-center shrink-0">
@@ -154,20 +157,20 @@ export default function Schedules() {
                       </span>
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-h2 text-h2 text-primary mb-1">{schedule.course?.name || 'Unknown Course'}</h3>
+                      <h3 className="font-h2 text-h2 text-primary mb-1">{course.name || 'Unknown Course'}</h3>
                       <div className="flex flex-col gap-1 mt-1">
                         <div className="flex items-center text-on-surface-variant font-metadata text-metadata gap-2">
                           <span className="material-symbols-outlined text-[16px]">schedule</span>
-                          {formatTimeJakarta(schedule.start_time)}–{formatTimeJakarta(schedule.end_time)}
+                          {course.room?.split(' ')[1] || '-'}
                         </div>
                         <div className="flex items-center text-on-surface-variant font-metadata text-metadata gap-2">
                           <span className="material-symbols-outlined text-[16px]">location_on</span>
-                          Ruang Kelas
+                          {course.room?.replace(/^[A-Za-z]+\s+\d{2}:\d{2}\s*-\s*\d{2}:\d{2}\s*/, '') || 'Ruang Kelas'}
                         </div>
                       </div>
                     </div>
                     <button 
-                      onClick={(e) => { e.stopPropagation(); setEditingSchedule({ schedule, color: theme.bgColor, icon: theme.icon }); }}
+                      onClick={(e) => { e.stopPropagation(); setEditingSchedule({ schedule: course, color: theme.bgColor, icon: theme.icon }); }}
                       className="flex items-center justify-center self-center mr-2 shrink-0 w-9 h-9 bg-surface-container-lowest rounded-full shadow-sm text-on-surface-variant hover:text-primary transition-colors active:scale-95"
                     >
                       <span className="material-symbols-outlined text-[20px]">edit</span>
@@ -178,42 +181,40 @@ export default function Schedules() {
 
               // Today Mode rendering
               return (
-                <div key={schedule.id} className="flex gap-4 items-stretch w-full">
+                <div key={course.id} className="flex gap-4 items-stretch w-full">
                   {/* Time Column */}
                   <div className="flex flex-col items-end w-12 shrink-0 py-1">
-                    <span className="font-label-medium text-label-medium text-primary">{formatTimeJakarta(schedule.start_time)}</span>
-                    <div className="flex-grow w-px bg-muted-divider my-2 mr-1"></div>
-                    <span className="font-metadata text-metadata text-on-surface-variant">{formatTimeJakarta(schedule.end_time)}</span>
+                    <span className="font-label-medium text-label-medium text-primary text-right">{course.room?.split(' ')[1] || '-'}</span>
                   </div>
 
                   {/* Content Card */}
                   <div 
-                    onClick={() => setSelectedCourseId(schedule.course_id)}
-                    className={`${theme.bgColor} rounded-[24px] p-4 flex-grow relative overflow-hidden w-full cursor-pointer hover:opacity-90 transition-opacity`}
+                    onClick={() => setSelectedCourseId(course.id)}
+                    className={`${theme.bgColor} rounded-[24px] p-4 flex-grow relative overflow-hidden w-full cursor-pointer hover:opacity-90 transition-opacity shadow-sm`}
                   >
                     <div className="flex items-start gap-3 mb-3">
-                      <div className="bg-ink-on-dark text-on-primary w-12 h-12 flex items-center justify-center rounded-[16px] shrink-0">
+                      <div className="bg-ink-on-dark text-on-primary w-12 h-12 flex items-center justify-center rounded-[16px] shrink-0 shadow-sm">
                         <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>{theme.icon}</span>
                       </div>
                       <div className="pt-1">
-                        <h3 className="font-h2 text-h2 text-primary">{schedule.course?.name || 'Unknown Course'}</h3>
-                        <p className="font-metadata text-metadata text-status-safe-fg mt-1">Ruang Kelas</p>
+                        <h3 className="font-h2 text-h2 text-primary leading-snug">{course.name || 'Unknown Course'}</h3>
+                        <p className="font-metadata text-metadata text-status-safe-fg mt-1 text-xs truncate max-w-[150px]">{course.room?.replace(/^[A-Za-z]+\s+\d{2}:\d{2}\s*-\s*\d{2}:\d{2}\s*/, '') || 'Ruang Kelas'}</p>
                       </div>
                     </div>
                     
                     <div className="flex gap-2">
                       <button 
                         onClick={(e) => { e.stopPropagation(); window.open('https://spada.upnyk.ac.id/login/index.php', '_blank', 'noopener,noreferrer'); }}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-muted-divider bg-white/50 backdrop-blur-sm font-metadata text-metadata text-primary hover:bg-white transition-colors"
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-muted-divider bg-white/60 backdrop-blur-sm font-metadata text-metadata font-semibold text-primary hover:bg-white active:scale-95 transition-all shadow-sm"
                       >
-                        <span className="material-symbols-outlined text-[14px]" data-icon="open_in_new">open_in_new</span>
+                        <span className="material-symbols-outlined text-[16px]" data-icon="open_in_new">open_in_new</span>
                         ABSEN
                       </button>
                       <button 
-                        onClick={(e) => { e.stopPropagation(); setActiveNote(schedule); }}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-full border border-muted-divider bg-white/50 backdrop-blur-sm font-metadata text-metadata text-primary hover:bg-white transition-colors"
+                        onClick={(e) => { e.stopPropagation(); setActiveNote({ course_id: course.id, course: { name: course.name } }); }}
+                        className="flex items-center gap-1.5 px-4 py-2 rounded-full border border-muted-divider bg-white/60 backdrop-blur-sm font-metadata text-metadata font-semibold text-primary hover:bg-white active:scale-95 transition-all shadow-sm"
                       >
-                        <span className="material-symbols-outlined text-[14px]" data-icon="edit_note">edit_note</span>
+                        <span className="material-symbols-outlined text-[16px]" data-icon="edit_note">edit_note</span>
                         CATAT
                       </button>
                     </div>
@@ -235,7 +236,7 @@ export default function Schedules() {
       </button>
 
       {showAddModal && (
-        <AddSchedule onClose={() => setShowAddModal(false)} onSuccess={() => fetchSchedules()} />
+        <AddSchedule onClose={() => setShowAddModal(false)} onSuccess={() => fetchCourses()} />
       )}
 
       {editingSchedule && (
@@ -244,7 +245,10 @@ export default function Schedules() {
           color={editingSchedule.color}
           icon={editingSchedule.icon}
           onClose={() => setEditingSchedule(null)} 
-          onSuccess={() => fetchSchedules()} 
+          onSuccess={() => {
+            setEditingSchedule(null);
+            fetchCourses();
+          }} 
         />
       )}
 
@@ -254,7 +258,7 @@ export default function Schedules() {
           course_name={activeNote.course?.name || 'Unknown Course'}
           date={selectedDate}
           onClose={() => setActiveNote(null)}
-          onSuccess={() => fetchSchedules()}
+          onSuccess={() => fetchCourses()}
         />
       )}
 
@@ -295,7 +299,10 @@ export default function Schedules() {
           </button>
 
           {/* Item 4 (Inactive) - KELAS */}
-          <button className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform">
+          <button 
+            className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform"
+            onClick={() => navigate('/courses')}
+          >
             <div className="flex items-center justify-center text-[#848484] rounded-[16px] w-12 h-8 mb-1">
               <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>class</span>
             </div>
@@ -303,7 +310,7 @@ export default function Schedules() {
           </button>
 
           {/* Item 5 (Inactive) - PROYEK */}
-          <button className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform">
+          <button className="flex flex-col items-center justify-center w-16 group active:scale-90 transition-transform" onClick={() => navigate('/projects')}>
             <div className="flex items-center justify-center text-[#848484] rounded-[16px] w-12 h-8 mb-1">
               <span className="material-symbols-outlined text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>folder_open</span>
             </div>

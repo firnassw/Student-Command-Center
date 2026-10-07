@@ -5,6 +5,12 @@ import Dashboard from './components/Dashboard';
 import Schedules from './components/Schedules';
 import Tasks from './components/Tasks';
 import TaskDetail from './components/TaskDetail';
+import Courses from './components/Courses';
+import CourseDetail from './components/CourseDetail';
+import Projects from './components/Projects';
+import AddProject from './components/AddProject';
+import AddProjectTask from './components/AddProjectTask';
+import ProjectDetail from './components/ProjectDetail';
 
 function App() {
   const [session, setSession] = useState<any>(null);
@@ -278,8 +284,14 @@ function App() {
     <Routes>
       <Route path="/" element={<Dashboard setActiveView={handleNav} />} />
       <Route path="/schedules" element={<Schedules setActiveView={handleNav} />} />
-      <Route path="/tasks" element={<Tasks setActiveView={handleNav} />} />
+      <Route path="/tasks" element={<Tasks />} />
       <Route path="/tasks/:id" element={<TaskDetail />} />
+      <Route path="/courses" element={<Courses />} />
+      <Route path="/courses/:id" element={<CourseDetail />} />
+      <Route path="/projects" element={<Projects />} />
+      <Route path="/projects/add" element={<AddProject />} />
+      <Route path="/projects/:projectId" element={<ProjectDetail />} />
+      <Route path="/projects/:projectId/tasks/add" element={<AddProjectTask />} />
     </Routes>
   );
 }

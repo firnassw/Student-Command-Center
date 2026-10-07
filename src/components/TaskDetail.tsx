@@ -38,6 +38,13 @@ export default function TaskDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Add Work Plan States
+  const [isAddPlanModalOpen, setIsAddPlanModalOpen] = useState(false);
+  const [newPlanTitle, setNewPlanTitle] = useState('');
+  const [newPlanStartTime, setNewPlanStartTime] = useState('');
+  const [newPlanEndTime, setNewPlanEndTime] = useState('');
+  const [isSubmittingPlan, setIsSubmittingPlan] = useState(false);
+
   useEffect(() => {
     if (!id) return;
     
@@ -99,6 +106,38 @@ export default function TaskDetail() {
     }
   };
 
+  const handleAddWorkPlan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!id || !newPlanTitle || !newPlanStartTime || !newPlanEndTime) return;
+    
+    setIsSubmittingPlan(true);
+    try {
+      const { data, error } = await supabase
+        .from('work_plans')
+        .insert([{
+          task_id: id,
+          title: newPlanTitle,
+          start_time: new Date(newPlanStartTime).toISOString(),
+          end_time: new Date(newPlanEndTime).toISOString(),
+          status: 'planned'
+        }])
+        .select()
+        .single();
+        
+      if (error) throw error;
+      
+      setWorkPlans(prev => [...prev, data].sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime()));
+      setIsAddPlanModalOpen(false);
+      setNewPlanTitle('');
+      setNewPlanStartTime('');
+      setNewPlanEndTime('');
+    } catch (err: any) {
+      alert("Gagal menambahkan rencana kerja: " + err.message);
+    } finally {
+      setIsSubmittingPlan(false);
+    }
+  };
+
   const formatDeadline = (isoString: string) => {
     const d = new Date(isoString);
     const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -130,10 +169,10 @@ export default function TaskDetail() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'todo': return 'bg-gray-400';
-      case 'in_progress': return 'bg-yellow-400 animate-pulse';
+      case 'todo': return 'bg-[#71717A]';
+      case 'in_progress': return 'bg-amber-500';
       case 'completed': return 'bg-green-500';
-      default: return 'bg-gray-400';
+      default: return 'bg-[#71717A]';
     }
   };
 
@@ -181,91 +220,95 @@ export default function TaskDetail() {
 
       <main className="flex-1 w-full max-w-2xl mx-auto px-6 pt-6 space-y-6">
         {/* Hero Card */}
-        <section className={`p-6 rounded-[24px] ${styles.cardBg} border ${styles.cardBorder} shadow-sm relative overflow-hidden`}>
-          <div className="flex gap-2 items-center mb-3">
-            <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${styles.pillBg} ${styles.textColor} text-[10px] font-bold tracking-widest uppercase shadow-sm`}>
+        <section className={`p-5 rounded-[24px] ${styles.cardBg} border border-black/5 relative overflow-hidden`}>
+          {/* Status Badge & Indicator */}
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/60 ${styles.textColor} text-[11px] font-headline font-bold tracking-wider uppercase backdrop-blur-sm`}>
               <span className={`w-1.5 h-1.5 rounded-full ${styles.dotBg} animate-pulse`}></span>
               {urgencyInfo.text}
-            </div>
+            </span>
             {task.status === 'completed' ? (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-green-100 text-green-700 text-[10px] font-bold tracking-widest uppercase shadow-sm">
+              <span className={`px-2.5 py-1 rounded-full bg-white/50 text-[11px] font-semibold ${styles.textColor} opacity-90`}>
                 Selesai
-              </div>
+              </span>
             ) : (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/60 text-[#141414] text-[10px] font-bold tracking-widest uppercase shadow-sm">
+              <span className={`px-2.5 py-1 rounded-full bg-white/50 text-[11px] font-semibold ${styles.textColor} opacity-90`}>
                 {urgencyInfo.type === 'urgent' ? 'Tenggat Dekat' : 'Tenggat Aman'}
-              </div>
+              </span>
             )}
           </div>
 
-          <h2 className={`font-headline font-bold text-[24px] leading-tight mb-2 text-[#141414]`}>
+          {/* Large Bold Title */}
+          <h2 className="font-headline font-extrabold text-[22px] leading-tight text-[#141414] mb-2.5">
             {task.title}
           </h2>
-          
-          <div className="flex items-center gap-2 mb-4 text-[#4B5563] text-sm font-semibold">
-            <span className="material-symbols-outlined text-[16px]">menu_book</span>
-            <span>{task.course?.name || 'Umum'}</span>
+
+          {/* Course & Priority Metadata */}
+          <div className="flex items-center flex-wrap gap-y-1.5 gap-x-2 text-[13px] text-[#141414]/80 mb-3.5 font-medium">
+            <span className="inline-flex items-center gap-1.5 bg-black/5 px-2.5 py-0.5 rounded-md text-[#141414] font-semibold">
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+              </svg>
+              {task.course?.name || 'Umum'}
+            </span>
+            <span>·</span>
+            <span className={`${styles.textColor} font-semibold`}>{getPriorityLabel(task.priority)}</span>
           </div>
 
-          <div className="w-full h-[1px] bg-black/10 my-4 rounded-full"></div>
-
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center gap-2 text-sm font-medium text-[#4B5563]">
-              <span className="material-symbols-outlined text-[18px]">flag</span>
-              <span>{getPriorityLabel(task.priority)}</span>
-            </div>
-            <div className="flex items-center gap-2 text-sm font-bold text-[#141414]">
-              <span className="material-symbols-outlined text-[18px]">schedule</span>
-              <span>{formatDeadline(task.deadline)}</span>
-            </div>
+          {/* Deadline Detail Bar */}
+          <div className="pt-3 border-t border-black/10 flex items-center gap-2 text-[12.5px] text-[#141414]/85 font-medium">
+            <svg className={`w-4 h-4 ${styles.textColor} shrink-0`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span>Deadline: <strong className="font-bold text-[#141414]">{formatDeadline(task.deadline)}</strong></span>
           </div>
         </section>
 
-        {/* Status Pengerjaan */}
-        <section className="bg-white p-5 rounded-[24px] border border-[#E4E4E7]/60 shadow-sm flex items-center justify-between">
+        {/* Clean Status Selector */}
+        <section className="bg-[#FAFAFA] border border-[#E4E4E7] rounded-[20px] p-4 flex items-center justify-between">
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold tracking-widest uppercase text-gray-400 mb-1">
-              STATUS PENGERJAAN
-            </span>
-            <div className="flex items-center gap-2">
+            <span className="text-[11px] font-headline font-bold uppercase tracking-wider text-[#71717A]">Status Pengerjaan</span>
+            <div className="flex items-center gap-2 mt-1">
               <span className={`w-2.5 h-2.5 rounded-full ${getStatusColor(task.status)}`}></span>
-              <span className="font-semibold text-sm capitalize">
+              <span className="font-headline font-semibold text-[15px] text-[#141414]">
                 {task.status === 'todo' ? 'Belum Dimulai' : task.status === 'in_progress' ? 'Sedang Dikerjakan' : 'Selesai'}
               </span>
             </div>
           </div>
+          
           <div className="relative">
             <select
               value={task.status}
               onChange={(e) => updateStatus(e.target.value)}
-              className="appearance-none bg-gray-50 border border-gray-200 text-gray-700 text-xs font-bold py-2 pl-4 pr-8 rounded-full focus:outline-none focus:ring-2 focus:ring-black cursor-pointer shadow-sm"
+              className="appearance-none bg-white border border-[#E4E4E7] text-[#141414] text-[12px] font-medium py-1.5 pl-3 pr-8 rounded-full focus:outline-none hover:bg-gray-50 active:scale-95 transition-all shadow-sm cursor-pointer z-10 relative"
             >
               <option value="todo">Belum Dimulai</option>
               <option value="in_progress">Sedang Dikerjakan</option>
               <option value="completed">Selesai</option>
             </select>
-            <span className="material-symbols-outlined absolute right-2.5 top-1/2 -translate-y-1/2 text-[16px] pointer-events-none text-gray-500">
-              expand_more
-            </span>
+            <svg className="w-3.5 h-3.5 text-[#71717A] absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none z-20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7"/>
+            </svg>
           </div>
         </section>
 
         {/* Rencana Kerja */}
-        <section>
-          <div className="flex justify-between items-end mb-4 px-1">
+        <section className="flex flex-col space-y-3 pb-8">
+          <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-2">
-              <h3 className="font-headline font-bold text-lg text-base-ink">Rencana Kerja</h3>
-              <span className="bg-neutral-200 text-neutral-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
+              <h3 className="font-headline font-bold text-[17px] text-[#141414]">Rencana Kerja</h3>
+              <span className="px-2 py-0.5 rounded-full bg-gray-100 text-[#141414] text-[11px] font-semibold">
                 {workPlans.length} Slot
               </span>
             </div>
-            <span className="text-xs font-semibold text-gray-500">{calculateTotalDuration()}</span>
+            <span className="text-[12px] text-[#71717A] font-medium">{calculateTotalDuration()}</span>
           </div>
 
           {workPlans.length === 0 ? (
-            <div className="bg-white p-6 rounded-[24px] border border-dashed border-[#E4E4E7] text-center flex flex-col items-center">
+            <div className="bg-white p-6 rounded-[20px] border border-dashed border-[#E4E4E7] text-center flex flex-col items-center">
               <span className="material-symbols-outlined text-4xl text-neutral-300 mb-2">assignment_add</span>
-              <p className="text-neutral-500 text-sm font-medium">Belum ada rencana kerja.<br/>Tambahkan sekarang agar tugas lebih ringan!</p>
+              <p className="text-[#71717A] text-sm font-medium">Belum ada rencana kerja.<br/>Tambahkan sekarang agar tugas lebih ringan!</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -273,25 +316,32 @@ export default function TaskDetail() {
                 const start = new Date(plan.start_time);
                 const end = new Date(plan.end_time);
                 const durationMins = Math.round((end.getTime() - start.getTime()) / 60000);
+                const pastelBg = index % 2 === 0 ? 'bg-[#DFEDED]' : 'bg-[#F7EACA]';
                 
                 return (
-                  <div key={plan.id} className="bg-white p-4 rounded-[20px] border border-gray-200 shadow-sm flex items-start gap-4">
-                    <div className="w-8 h-8 rounded-full bg-neutral-100 flex items-center justify-center text-sm font-bold text-neutral-600 shrink-0">
+                  <div key={plan.id} className="bg-white border border-[#E4E4E7] rounded-[20px] p-4 flex items-start gap-3.5 shadow-sm">
+                    {/* Numbered Pastel Circle Badge */}
+                    <div className={`w-8 h-8 rounded-full ${pastelBg} text-[#141414] font-headline font-bold text-[14px] flex items-center justify-center shrink-0 mt-0.5 border border-black/5`}>
                       {index + 1}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start mb-1">
-                        <span className="text-xs font-bold text-neutral-500">
-                          {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'][start.getDay()]}, {start.getHours().toString().padStart(2, '0')}:{start.getMinutes().toString().padStart(2, '0')}
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="text-[12px] font-semibold text-[#71717A]">
+                          {['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'][start.getDay()]}, {start.getHours().toString().padStart(2, '0')}.{start.getMinutes().toString().padStart(2, '0')} - {end.getHours().toString().padStart(2, '0')}.{end.getMinutes().toString().padStart(2, '0')}
                         </span>
-                        <span className="text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-100">
-                          DIRENCANAKAN
+                        <span className="px-2 py-0.5 rounded-full bg-gray-100 text-[#71717A] text-[10px] font-headline font-bold tracking-wider uppercase">
+                          {plan.status === 'completed' ? 'SELESAI' : 'DIRENCANAKAN'}
                         </span>
                       </div>
-                      <h4 className="font-bold text-[#141414] text-sm mb-1">{plan.title}</h4>
-                      <div className="flex items-center gap-1 text-xs font-medium text-neutral-500">
-                        <span className="material-symbols-outlined text-[14px]">timer</span>
-                        <span>{durationMins} Menit</span>
+                      <p className="font-headline font-semibold text-[14.5px] text-[#141414] leading-snug">
+                        {plan.title}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-2 text-[11.5px] text-[#71717A]">
+                        <svg className="w-3 h-3 text-[#71717A]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2"/>
+                        </svg>
+                        <span>Durasi: {durationMins} menit</span>
                       </div>
                     </div>
                   </div>
@@ -304,17 +354,87 @@ export default function TaskDetail() {
 
       {/* Action Buttons */}
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-[#F4F4F5] via-[#F4F4F5] to-transparent z-20 pointer-events-none">
-        <div className="max-w-2xl mx-auto flex flex-col gap-3 pointer-events-auto">
-          <button className="w-full bg-[#141414] text-white font-bold text-sm py-4 rounded-full shadow-[0_8px_16px_rgba(0,0,0,0.15)] hover:bg-black active:scale-95 transition-all flex justify-center items-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">add</span>
-            TAMBAH RENCANA KERJA
+        <div className="max-w-2xl mx-auto flex flex-col gap-2.5 pointer-events-auto mt-auto">
+          {/* Dark Full-width Primary Button */}
+          <button 
+            onClick={() => setIsAddPlanModalOpen(true)}
+            className="w-full py-3.5 px-4 bg-[#141414] text-white rounded-full font-headline font-bold text-[13.5px] tracking-wide flex items-center justify-center gap-2 shadow-sm hover:bg-black active:scale-[0.98] transition-all"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <line x1="12" y1="5" x2="12" y2="19"/>
+              <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>TAMBAH RENCANA KERJA</span>
           </button>
-          <button className="w-full bg-white text-[#141414] font-bold text-sm py-4 rounded-full border border-gray-200 shadow-sm hover:bg-gray-50 active:scale-95 transition-all flex justify-center items-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">edit</span>
-            EDIT TUGAS
+
+          {/* Secondary Outlined Button */}
+          <button className="w-full py-3.5 px-4 bg-white border border-[#E4E4E7] text-[#141414] rounded-full font-headline font-bold text-[13.5px] tracking-wide flex items-center justify-center gap-2 hover:bg-gray-50 active:scale-[0.98] transition-all">
+            <svg className="w-4 h-4 text-[#71717A]" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            <span>EDIT TUGAS</span>
           </button>
         </div>
       </div>
+
+      {/* Add Work Plan Modal */}
+      {isAddPlanModalOpen && (
+        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-2xl mx-auto rounded-t-[24px] p-6 pb-12 shadow-xl animate-in slide-in-from-bottom duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-headline font-bold text-xl text-[#141414]">Tambah Rencana Kerja</h3>
+              <button onClick={() => setIsAddPlanModalOpen(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200">
+                <span className="material-symbols-outlined text-[20px]">close</span>
+              </button>
+            </div>
+            
+            <form onSubmit={handleAddWorkPlan} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Aktivitas</label>
+                <input 
+                  type="text" 
+                  value={newPlanTitle}
+                  onChange={(e) => setNewPlanTitle(e.target.value)}
+                  placeholder="Contoh: Mengerjakan bab 1" 
+                  className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Waktu Mulai</label>
+                  <input 
+                    type="datetime-local" 
+                    value={newPlanStartTime}
+                    onChange={(e) => setNewPlanStartTime(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">Waktu Selesai</label>
+                  <input 
+                    type="datetime-local" 
+                    value={newPlanEndTime}
+                    onChange={(e) => setNewPlanEndTime(e.target.value)}
+                    className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium focus:outline-none focus:border-black focus:ring-1 focus:ring-black"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <button 
+                type="submit" 
+                disabled={isSubmittingPlan}
+                className="w-full py-4 bg-black text-white rounded-full font-bold text-sm hover:bg-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all mt-6 shadow-[0_4px_12px_rgba(0,0,0,0.1)]"
+              >
+                {isSubmittingPlan ? 'MENYIMPAN...' : 'SIMPAN RENCANA'}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
