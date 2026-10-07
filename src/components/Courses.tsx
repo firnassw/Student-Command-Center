@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { getCourseTheme } from '../utils/courseTheme';
 import AddSchedule from './AddSchedule';
@@ -19,6 +20,8 @@ export default function Courses() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     fetchCourses();
@@ -45,29 +48,42 @@ export default function Courses() {
     }
   };
 
-  const handleDeleteCourse = async (e: React.MouseEvent, id: string) => {
+  const promptDeleteCourse = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (window.confirm('Yakin ingin menghapus kelas ini? Semua tugas di dalamnya akan ikut terhapus!')) {
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Not logged in');
+    setCourseToDelete(id);
+  };
 
-        // Delete associated tasks first because schema uses 'on delete set null'
-        await supabase.from('tasks').delete().eq('course_id', id).eq('user_id', user.id);
-        
-        // Delete the course
-        const { error } = await supabase.from('courses').delete().eq('id', id).eq('user_id', user.id);
-        if (error) throw error;
-        
-        fetchCourses();
-      } catch (err: any) {
-        alert('Gagal menghapus kelas: ' + err.message);
-      }
+  const executeDeleteCourse = async () => {
+    if (!courseToDelete) return;
+    setIsDeleting(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not logged in');
+
+      // Delete associated tasks first
+      await supabase.from('tasks').delete().eq('course_id', courseToDelete).eq('user_id', user.id);
+      
+      // Delete the course
+      const { error } = await supabase.from('courses').delete().eq('id', courseToDelete).eq('user_id', user.id);
+      if (error) throw error;
+      
+      fetchCourses();
+    } catch (err: any) {
+      alert('Gagal menghapus kelas: ' + err.message);
+    } finally {
+      setIsDeleting(false);
+      setCourseToDelete(null);
     }
   };
 
   return (
-    <div className="bg-[#F4F4F5] min-h-screen w-full flex flex-col font-sans">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      exit={{ opacity: 0, y: -15, transition: { duration: 0.2 } }}
+      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+      className="bg-[#F4F4F5] min-h-screen w-full flex flex-col font-sans"
+    >
       {/* App Bar */}
       <div className="w-full bg-white z-10 sticky top-0 border-b border-[#E4E4E7]/50">
         <header className="max-w-2xl mx-auto px-6 py-4 flex justify-between items-center w-full">
@@ -100,13 +116,18 @@ export default function Courses() {
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
-            {courses.map(course => {
+            {courses.map((course, index) => {
               const theme = getCourseTheme(course.name);
               return (
-              <div 
+              <motion.div 
                 key={course.id}
                 onClick={() => navigate(`/courses/${course.id}`)}
-                className={`${theme.bgColor} p-5 rounded-[24px] shadow-sm flex flex-col gap-3 relative overflow-hidden active:scale-[0.98] transition-all cursor-pointer hover:opacity-90 hover:shadow-md`}
+                initial={{ opacity: 0, y: 30 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ type: "spring", stiffness: 260, damping: 20, delay: index * 0.08 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`${theme.bgColor} p-5 rounded-[24px] shadow-sm flex flex-col gap-3 relative overflow-hidden cursor-pointer transition-colors hover:shadow-md`}
               >
                 <div>
                   <div className="flex justify-between items-start mb-1.5">
@@ -118,7 +139,7 @@ export default function Courses() {
                         {course.sks} SKS
                       </span>
                       <button 
-                        onClick={(e) => handleDeleteCourse(e, course.id)}
+                        onClick={(e) => promptDeleteCourse(e, course.id)}
                         className="text-[#1b1b1b]/40 hover:text-red-500 transition-colors w-6 h-6 flex items-center justify-center rounded-full hover:bg-white/50 backdrop-blur-sm"
                         aria-label="Hapus kelas"
                       >
@@ -134,7 +155,7 @@ export default function Courses() {
                     <span className="truncate">{course.lecturer || 'Belum ada dosen'}</span>
                   </div>
                 </div>
-              </div>
+              </motion.div>
               );
             })}
           </div>
@@ -150,6 +171,51 @@ export default function Courses() {
           }} 
         />
       )}
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {courseToDelete && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="bg-white w-full max-w-sm rounded-[24px] p-6 shadow-2xl flex flex-col gap-6"
+            >
+              <div className="flex flex-col gap-2 text-center">
+                <div className="w-14 h-14 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span className="material-symbols-outlined text-[28px]">delete_forever</span>
+                </div>
+                <h3 className="font-h1 text-xl text-[#141414] font-bold">Hapus Mata Kuliah?</h3>
+                <p className="text-sm text-neutral-500 font-medium">Yakin ingin menghapus kelas ini? Semua tugas di dalamnya akan ikut terhapus secara permanen.</p>
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={executeDeleteCourse}
+                  disabled={isDeleting}
+                  className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold text-sm tracking-wide transition-colors disabled:opacity-50"
+                >
+                  {isDeleting ? 'MENGHAPUS...' : 'YA, HAPUS PERMANEN'}
+                </button>
+                <button 
+                  onClick={() => setCourseToDelete(null)}
+                  disabled={isDeleting}
+                  className="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-bold text-sm tracking-wide transition-colors disabled:opacity-50"
+                >
+                  BATAL
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Global Bottom Navbar */}
       <nav className="fixed bottom-0 left-0 right-0 w-full bg-[#FFFFFF] border-t border-[#EBEAE6] z-50 pb-safe">
@@ -190,6 +256,6 @@ export default function Courses() {
           </button>
         </div>
       </nav>
-    </div>
+    </motion.div>
   );
 }

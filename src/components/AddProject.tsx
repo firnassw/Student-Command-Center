@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 
 interface Course {
@@ -86,7 +87,13 @@ export default function AddProject() {
   };
 
   return (
-    <div className="bg-[#F1F5F9] min-h-screen w-full flex flex-col font-sans text-[#000000]">
+    <motion.div 
+      initial={{ opacity: 0, x: 20 }} 
+      animate={{ opacity: 1, x: 0 }} 
+      exit={{ opacity: 0, x: -20, transition: { duration: 0.2 } }}
+      transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      className="bg-[#F1F5F9] min-h-screen w-full flex flex-col font-sans text-[#000000]"
+    >
       {/* Header / App Bar */}
       <header className="h-16 px-5 flex items-center justify-center border-b border-neutral-200 bg-white z-10 sticky top-0 shadow-sm">
         <div className="w-full max-w-md flex items-center justify-between">
@@ -251,6 +258,6 @@ export default function AddProject() {
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

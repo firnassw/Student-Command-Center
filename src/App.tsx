@@ -1,16 +1,18 @@
-import { useEffect, useState } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { useEffect, useState, lazy, Suspense } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from './lib/supabase';
-import Dashboard from './components/Dashboard';
-import Schedules from './components/Schedules';
-import Tasks from './components/Tasks';
-import TaskDetail from './components/TaskDetail';
-import Courses from './components/Courses';
-import CourseDetail from './components/CourseDetail';
-import Projects from './components/Projects';
-import AddProject from './components/AddProject';
-import AddProjectTask from './components/AddProjectTask';
-import ProjectDetail from './components/ProjectDetail';
+import { AnimatePresence } from 'framer-motion';
+
+const Dashboard = lazy(() => import('./components/Dashboard'));
+const Schedules = lazy(() => import('./components/Schedules'));
+const Tasks = lazy(() => import('./components/Tasks'));
+const TaskDetail = lazy(() => import('./components/TaskDetail'));
+const Courses = lazy(() => import('./components/Courses'));
+const CourseDetail = lazy(() => import('./components/CourseDetail'));
+const Projects = lazy(() => import('./components/Projects'));
+const AddProject = lazy(() => import('./components/AddProject'));
+const AddProjectTask = lazy(() => import('./components/AddProjectTask'));
+const ProjectDetail = lazy(() => import('./components/ProjectDetail'));
 
 function App() {
   const [session, setSession] = useState<any>(null);
@@ -25,6 +27,7 @@ function App() {
   const [showNotifPrompt, setShowNotifPrompt] = useState(false);
   const [skippedNotif, setSkippedNotif] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -121,9 +124,9 @@ function App() {
           <div className="w-full max-w-[390px] md:max-w-md min-h-screen md:min-h-[650px] md:h-auto bg-surface-container-lowest text-on-surface flex flex-col items-center justify-center p-lg relative md:shadow-2xl md:rounded-2xl md:my-8 border border-muted-divider/30 md:border-none">
             <main className="w-full flex-1 flex flex-col justify-center space-y-xl mt-8 md:mt-0">
               {/* Header Section */}
-              <header className="flex flex-col space-y-md">
-                <div className="w-12 h-12 bg-ink-on-dark rounded-badge flex items-center justify-center rounded-2xl">
-                  <span className="material-symbols-outlined text-on-primary text-2xl" data-icon="school" data-weight="regular">school</span>
+              <header className="flex flex-col items-center text-center space-y-md">
+                <div className="w-32 mb-2">
+                  <img src="/logo-full.svg" alt="Student Command Center" className="w-full h-auto object-contain" />
                 </div>
                 <div className="space-y-xs pt-sm">
                   <h1 className="font-h1-mobile text-h1-mobile text-primary">Selamat datang</h1>
@@ -180,8 +183,8 @@ function App() {
             <button className="active:scale-95 transition-transform duration-200 text-primary dark:text-on-primary hover:opacity-80 flex items-center justify-center p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/20">
               <span aria-hidden="true" className="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
             </button>
-            <div className="font-h1-mobile text-h1-mobile font-bold text-tertiary dark:text-on-tertiary truncate px-2">
-              Student Command Center
+            <div className="h-6 flex items-center justify-center">
+              <img src="/logo-full.svg" alt="Student Command Center" className="h-full w-auto object-contain" />
             </div>
             <div className="w-10"></div>
           </header>
@@ -281,18 +284,22 @@ function App() {
   };
 
   return (
-    <Routes>
-      <Route path="/" element={<Dashboard setActiveView={handleNav} />} />
-      <Route path="/schedules" element={<Schedules setActiveView={handleNav} />} />
-      <Route path="/tasks" element={<Tasks />} />
-      <Route path="/tasks/:id" element={<TaskDetail />} />
-      <Route path="/courses" element={<Courses />} />
-      <Route path="/courses/:id" element={<CourseDetail />} />
-      <Route path="/projects" element={<Projects />} />
-      <Route path="/projects/add" element={<AddProject />} />
-      <Route path="/projects/:projectId" element={<ProjectDetail />} />
-      <Route path="/projects/:projectId/tasks/add" element={<AddProjectTask />} />
-    </Routes>
+    <AnimatePresence mode="wait">
+      <Suspense fallback={<div className="min-h-screen flex items-center justify-center font-body text-on-surface-variant animate-pulse">Memuat...</div>}>
+        <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<Dashboard setActiveView={handleNav} />} />
+        <Route path="/schedules" element={<Schedules setActiveView={handleNav} />} />
+        <Route path="/tasks" element={<Tasks />} />
+        <Route path="/tasks/:id" element={<TaskDetail />} />
+        <Route path="/courses" element={<Courses />} />
+        <Route path="/courses/:id" element={<CourseDetail />} />
+        <Route path="/projects" element={<Projects />} />
+        <Route path="/projects/add" element={<AddProject />} />
+        <Route path="/projects/:projectId" element={<ProjectDetail />} />
+        <Route path="/projects/:projectId/tasks/add" element={<AddProjectTask />} />
+        </Routes>
+      </Suspense>
+    </AnimatePresence>
   );
 }
 

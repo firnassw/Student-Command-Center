@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabase';
 import { Task } from '../hooks/useSupabaseData';
 import { calculateUrgency, getUrgencyStyles, UrgencyInfo } from '../utils/urgencyCalculator';
+import { AnimatePresence, motion } from 'framer-motion';
 
 import AddTask from './AddTask';
 import { useNavigate } from 'react-router-dom';
@@ -242,20 +243,34 @@ export default function Tasks() {
         </button>
       </div>
 
-      {showAddTask && (
-        <AddTask 
-          onBack={() => setShowAddTask(false)} 
-          onSuccess={() => {
-            setShowAddTask(false);
-            fetchTasks();
-          }} 
-        />
-      )}
+      <AnimatePresence>
+        {showAddTask && (
+          <AddTask 
+            onBack={() => setShowAddTask(false)} 
+            onSuccess={() => {
+              setShowAddTask(false);
+              fetchTasks();
+            }} 
+          />
+        )}
+      </AnimatePresence>
 
       {/* Filter Modal */}
+      <AnimatePresence>
       {showFilterModal && (
-        <div className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white w-full max-w-2xl mx-auto rounded-t-[24px] p-6 pb-10 shadow-xl animate-in slide-in-from-bottom duration-300">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/40 backdrop-blur-sm"
+        >
+          <motion.div 
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="bg-white w-full max-w-2xl mx-auto rounded-t-[24px] p-6 pb-10 shadow-xl"
+          >
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-headline font-bold text-xl text-[#141414]">Filter Tugas</h3>
               <button onClick={() => setShowFilterModal(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
@@ -341,9 +356,10 @@ export default function Tasks() {
                 TERAPKAN FILTER
               </button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Global Bottom Navbar (Full Width) */}
       <nav className="fixed bottom-0 left-0 right-0 w-full bg-[#FFFFFF] border-t border-[#EBEAE6] z-50 pb-safe">

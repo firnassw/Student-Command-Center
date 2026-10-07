@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 
 interface Project {
@@ -14,6 +15,7 @@ interface Project {
   tasks?: {
     status: string;
   }[];
+  status?: string;
 }
 
 const getProjectColor = (index: number) => {
@@ -50,6 +52,10 @@ export default function Projects() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState<string | 'all'>('all');
+  const [selectedCourse, setSelectedCourse] = useState<string | 'all'>('all');
 
   useEffect(() => {
     fetchProjects();
@@ -109,8 +115,29 @@ export default function Projects() {
     return 0; // Default progress
   };
 
+  const filteredProjects = projects.filter(project => {
+    if (selectedStatus !== 'all' && project.status !== selectedStatus) return false;
+    
+    const courseName = Array.isArray(project.course) 
+      ? project.course[0]?.name 
+      : project.course?.name || 'Umum';
+      
+    if (selectedCourse !== 'all' && courseName !== selectedCourse) return false;
+    return true;
+  });
+
+  const uniqueCourses = Array.from(new Set(projects.map(p => {
+    return Array.isArray(p.course) ? p.course[0]?.name : p.course?.name;
+  }).filter(Boolean) as string[]));
+
   return (
-    <div className="bg-[#F4F4F5] min-h-screen w-full flex flex-col font-sans">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      exit={{ opacity: 0, y: -15, transition: { duration: 0.2 } }}
+      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+      className="bg-[#F4F4F5] min-h-screen w-full flex flex-col font-sans"
+    >
       {/* Top Header */}
       <div className="w-full bg-white z-10 sticky top-0 border-b border-[#E4E4E7]/50">
         <header className="max-w-2xl mx-auto px-6 pt-4 pb-4 flex justify-between items-center w-full">
@@ -119,12 +146,13 @@ export default function Projects() {
               Proyek
             </h1>
             <p className="text-xs text-neutral-500 font-medium mt-0.5">
-              {projects.length} proyek akademik semester ini
+              {filteredProjects.length} proyek akademik semester ini
             </p>
           </div>
           <button 
+            onClick={() => setShowFilterModal(true)}
             aria-label="Filter" 
-            className="w-10 h-10 rounded-full flex items-center justify-center text-base-dark hover:bg-neutral-100 active:scale-95 transition-all"
+            className={`w-10 h-10 rounded-full flex items-center justify-center transition-all active:scale-95 ${selectedStatus !== 'all' || selectedCourse !== 'all' ? 'bg-[#141414] text-white shadow-sm' : 'text-base-dark hover:bg-neutral-100'}`}
           >
             <span className="material-symbols-outlined text-[24px]">tune</span>
           </button>
@@ -135,13 +163,13 @@ export default function Projects() {
       <main className="flex-1 w-full max-w-2xl mx-auto px-6 pt-4 pb-28 flex flex-col gap-4">
         {isLoading ? (
           <p className="text-neutral-500 text-sm text-center mt-10">Memuat proyek...</p>
-        ) : projects.length === 0 ? (
+        ) : filteredProjects.length === 0 ? (
           <div className="text-center py-10">
             <span className="material-symbols-outlined text-4xl text-neutral-300 mb-2">folder_open</span>
-            <p className="text-neutral-500 font-medium text-sm">Belum ada proyek.</p>
+            <p className="text-neutral-500 font-medium text-sm">Tidak ada proyek.</p>
           </div>
         ) : (
-          projects.map((project, index) => {
+          filteredProjects.map((project, index) => {
             const color = getProjectColor(index);
             const icon = getProjectIcon(index);
             const progress = getProgress(project);
@@ -153,10 +181,15 @@ export default function Projects() {
                 : project.course?.name || 'Umum';
 
             return (
-              <article 
+              <motion.article 
                 key={project.id}
                 onClick={() => navigate(`/projects/${project.id}`)}
-                className={`${color.bg} rounded-[24px] p-5 relative overflow-hidden transition-transform active:scale-[0.99] cursor-pointer`}
+                initial={{ opacity: 0, y: 30 }} 
+                animate={{ opacity: 1, y: 0 }} 
+                transition={{ type: "spring", stiffness: 260, damping: 20, delay: index * 0.08 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className={`${color.bg} rounded-[24px] p-5 relative overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-shadow`}
               >
                 {/* Top row: Icon Badge & Percentage */}
                 <div className="flex items-start justify-between">
@@ -189,20 +222,103 @@ export default function Projects() {
                     <div className="h-full bg-[#1C1C1E] rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
                   </div>
                 </div>
-              </article>
+              </motion.article>
             );
           })
         )}
       </main>
 
       {/* Floating Action Button (FAB) */}
-      <button 
+      <motion.button 
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.9 }}
         onClick={() => navigate('/projects/add')}
-        className="fixed bottom-[96px] right-6 md:right-auto md:left-[calc(50%+280px)] w-14 h-14 rounded-full bg-[#1C1C1E] text-white flex items-center justify-center shadow-lg shadow-black/20 hover:scale-105 active:scale-95 transition-all z-30" 
+        className="fixed bottom-[96px] right-6 md:right-auto md:left-[calc(50%+280px)] w-14 h-14 rounded-full bg-[#1C1C1E] text-white flex items-center justify-center shadow-lg shadow-black/20 z-30" 
         aria-label="Tambah Proyek"
       >
         <span className="material-symbols-outlined text-[28px]">add</span>
-      </button>
+      </motion.button>
+
+      {/* Filter Modal */}
+      <AnimatePresence>
+      {showFilterModal && (
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[100] flex flex-col justify-end bg-black/40 backdrop-blur-sm"
+        >
+          <motion.div 
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            className="bg-white w-full max-w-2xl mx-auto rounded-t-[24px] p-6 pb-10 shadow-xl"
+          >
+            <div className="flex items-center justify-between mb-6">
+               <h3 className="font-headline font-bold text-xl text-[#141414]">Filter Proyek</h3>
+               <button onClick={() => setShowFilterModal(false)} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors">
+                 <span className="material-symbols-outlined text-[20px]">close</span>
+               </button>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Status Filter */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Status</label>
+                <div className="flex flex-wrap gap-2">
+                  <button 
+                    onClick={() => setSelectedStatus('all')}
+                    className={`px-4 py-2 rounded-full font-bold text-xs transition-colors border ${selectedStatus === 'all' ? 'bg-[#141414] text-white border-[#141414]' : 'bg-white text-[#141414] border-gray-200 hover:bg-gray-50'}`}
+                  >Semua</button>
+                  <button 
+                    onClick={() => setSelectedStatus('not_started')}
+                    className={`px-4 py-2 rounded-full font-bold text-xs transition-colors border ${selectedStatus === 'not_started' ? 'bg-orange-50 text-orange-600 border-orange-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                  >Belum Mulai</button>
+                  <button 
+                    onClick={() => setSelectedStatus('in_progress')}
+                    className={`px-4 py-2 rounded-full font-bold text-xs transition-colors border ${selectedStatus === 'in_progress' ? 'bg-blue-50 text-blue-600 border-blue-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                  >Sedang Dikerjakan</button>
+                  <button 
+                    onClick={() => setSelectedStatus('completed')}
+                    className={`px-4 py-2 rounded-full font-bold text-xs transition-colors border ${selectedStatus === 'completed' ? 'bg-green-50 text-green-600 border-green-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                  >Selesai</button>
+                </div>
+              </div>
+
+              {/* Course Filter */}
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">Mata Kuliah</label>
+                <div className="flex flex-wrap gap-2">
+                  <button 
+                    onClick={() => setSelectedCourse('all')}
+                    className={`px-4 py-2 rounded-full font-bold text-xs transition-colors border ${selectedCourse === 'all' ? 'bg-[#141414] text-white border-[#141414]' : 'bg-white text-[#141414] border-gray-200 hover:bg-gray-50'}`}
+                  >Semua</button>
+                  {uniqueCourses.map(course => (
+                    <button 
+                      key={course}
+                      onClick={() => setSelectedCourse(course)}
+                      className={`px-4 py-2 rounded-full font-bold text-xs transition-colors border ${selectedCourse === course ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                    >{course}</button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-8 flex gap-3">
+               <button 
+                 onClick={() => { setSelectedStatus('all'); setSelectedCourse('all'); }}
+                 className="flex-1 py-3.5 bg-gray-100 text-gray-700 rounded-full font-bold text-sm hover:bg-gray-200 transition-all"
+               >RESET</button>
+               <button 
+                 onClick={() => setShowFilterModal(false)}
+                 className="flex-[2] py-3.5 bg-[#141414] text-white rounded-full font-bold text-sm hover:bg-black transition-all shadow-md"
+               >TERAPKAN FILTER</button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+      </AnimatePresence>
 
       {/* Global Bottom Navbar */}
       <nav className="fixed bottom-0 left-0 right-0 w-full bg-[#FFFFFF] border-t border-[#EBEAE6] z-50 pb-safe">
@@ -243,6 +359,6 @@ export default function Projects() {
           </button>
         </div>
       </nav>
-    </div>
+    </motion.div>
   );
 }

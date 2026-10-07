@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { useCourses } from '../hooks/useSupabaseData';
 
@@ -68,8 +69,19 @@ export default function AddTask({ onBack, onSuccess }: AddTaskProps) {
   const selectedCourseName = courses.find(c => c.id === courseId)?.name || 'Umum / Tidak Ada';
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black/40 flex flex-col items-center antialiased sm:p-4">
-      <div className="w-full h-full flex flex-col max-w-2xl mx-auto bg-[#FBFBFB] sm:rounded-[32px] overflow-hidden shadow-2xl relative">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[100] bg-black/40 flex flex-col items-center antialiased sm:p-4"
+    >
+      <motion.div 
+        initial={{ y: "100%" }}
+        animate={{ y: 0 }}
+        exit={{ y: "100%" }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="w-full h-full flex flex-col max-w-2xl mx-auto bg-[#FBFBFB] sm:rounded-[32px] overflow-hidden shadow-2xl relative"
+      >
         
         {/* App Bar */}
         <header className="w-full px-5 py-4 flex items-center justify-between bg-white border-b border-[#E4E4E7] z-20 sticky top-0 shadow-sm">
@@ -273,7 +285,7 @@ export default function AddTask({ onBack, onSuccess }: AddTaskProps) {
           </button>
         </div>
 
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

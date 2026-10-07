@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useCourses } from '../hooks/useSupabaseData';
 
 export default function EditSchedule({ schedule, color, icon, onClose, onSuccess }: { schedule: any, color: string, icon: string, onClose: () => void, onSuccess?: () => void }) {
@@ -9,6 +10,7 @@ export default function EditSchedule({ schedule, color, icon, onClose, onSuccess
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
 
   useEffect(() => {
     if (errorMessage) setErrorMessage(null);
@@ -31,19 +33,18 @@ export default function EditSchedule({ schedule, color, icon, onClose, onSuccess
     }
   };
 
-  const handleDelete = async () => {
-    if (window.confirm('Yakin ingin menghapus kelas ini? (Semua tugas terkait akan ikut terhapus)')) {
-      setIsDeleting(true);
-      try {
-        await deleteCourse(schedule.id);
-        onSuccess?.();
-        onClose();
-      } catch (error: any) {
-        console.error(error);
-        setErrorMessage(error.message || 'Terjadi kesalahan saat menghapus jadwal');
-      } finally {
-        setIsDeleting(false);
-      }
+  const executeDelete = async () => {
+    setIsDeleting(true);
+    try {
+      await deleteCourse(schedule.id);
+      onSuccess?.();
+      onClose();
+    } catch (error: any) {
+      console.error(error);
+      setErrorMessage(error.message || 'Terjadi kesalahan saat menghapus jadwal');
+    } finally {
+      setIsDeleting(false);
+      setShowConfirmDelete(false);
     }
   };
 
@@ -116,7 +117,8 @@ export default function EditSchedule({ schedule, color, icon, onClose, onSuccess
             {isSubmitting ? 'MENYIMPAN...' : 'SIMPAN PERUBAHAN'}
           </button>
           <button 
-            onClick={handleDelete}
+            type="button"
+            onClick={() => setShowConfirmDelete(true)}
             disabled={isSubmitting || isDeleting}
             className="w-full h-14 bg-white border border-red-200 text-red-600 rounded-full font-h2 text-h2 hover:bg-red-50 active:scale-[0.98] transition-all flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -124,6 +126,51 @@ export default function EditSchedule({ schedule, color, icon, onClose, onSuccess
           </button>
         </div>
       </div>
+
+      {/* Custom Confirmation Modal */}
+      <AnimatePresence>
+        {showConfirmDelete && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="bg-white w-full max-w-sm rounded-[24px] p-6 shadow-2xl flex flex-col gap-6"
+            >
+              <div className="flex flex-col gap-2 text-center">
+                <div className="w-14 h-14 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span className="material-symbols-outlined text-[28px]">delete_forever</span>
+                </div>
+                <h3 className="font-h1 text-xl text-[#141414] font-bold">Hapus Jadwal?</h3>
+                <p className="text-sm text-neutral-500 font-medium">Yakin ingin menghapus kelas ini? Semua tugas terkait akan ikut terhapus secara permanen.</p>
+              </div>
+              
+              <div className="flex flex-col gap-3">
+                <button 
+                  onClick={executeDelete}
+                  disabled={isDeleting}
+                  className="w-full h-12 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold text-sm tracking-wide transition-colors disabled:opacity-50"
+                >
+                  {isDeleting ? 'MENGHAPUS...' : 'YA, HAPUS PERMANEN'}
+                </button>
+                <button 
+                  onClick={() => setShowConfirmDelete(false)}
+                  disabled={isDeleting}
+                  className="w-full h-12 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full font-bold text-sm tracking-wide transition-colors disabled:opacity-50"
+                >
+                  BATAL
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

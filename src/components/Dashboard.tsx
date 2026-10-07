@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { useCourses, useTasks } from '../hooks/useSupabaseData';
 import { supabase } from '../lib/supabase';
 import { toZonedTime, format } from 'date-fns-tz';
@@ -83,13 +84,22 @@ export default function Dashboard() {
   const initial = firstName.charAt(0).toUpperCase();
 
   return (
-    <div className="bg-[#FFFFFF] text-primary font-body antialiased min-h-screen w-full flex flex-col">
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }} 
+      animate={{ opacity: 1, y: 0 }} 
+      exit={{ opacity: 0, y: -15, transition: { duration: 0.2 } }}
+      transition={{ type: "spring", stiffness: 300, damping: 24 }}
+      className="bg-[#FFFFFF] text-primary font-body antialiased min-h-screen w-full flex flex-col"
+    >
       {/* Global Header (Full Width) */}
       <header className="w-full top-0 sticky bg-[#FFFFFF] z-40 border-b border-[#EBEAE6]">
         <div className="flex justify-between items-center px-4 md:px-8 py-3 w-full">
-          <div className="flex flex-col gap-[2px]">
-            <p className="font-metadata text-metadata text-on-surface-variant leading-none">{getJakartaDateInfo()}</p>
-            <h1 className="font-h1-mobile text-h1-mobile text-[#191B1F] font-extrabold leading-none">Halo, {firstName}</h1>
+          <div className="flex items-center gap-3">
+            <img src="/logo-icon.svg" alt="SCC Logo" className="w-9 h-9 object-contain drop-shadow-sm" />
+            <div className="flex flex-col gap-[2px]">
+              <p className="font-metadata text-metadata text-on-surface-variant leading-none">{getJakartaDateInfo()}</p>
+              <h1 className="font-h1-mobile text-h1-mobile text-[#191B1F] font-extrabold leading-none">Halo, {firstName}</h1>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <button 
@@ -146,10 +156,16 @@ export default function Dashboard() {
                 <p className="text-on-surface-variant font-label-medium">No classes today</p>
               </div>
             ) : (
-              todaySchedules.map((course) => {
+              todaySchedules.map((course, index) => {
                 const theme = getCourseTheme(course.name);
                 return (
-                  <div key={course.id} className="flex gap-4 items-stretch w-full">
+                  <motion.div 
+                    key={course.id} 
+                    className="flex gap-4 items-stretch w-full"
+                    initial={{ opacity: 0, x: -20 }} 
+                    animate={{ opacity: 1, x: 0 }} 
+                    transition={{ type: "spring", stiffness: 260, damping: 20, delay: index * 0.1 }}
+                  >
                     {/* Time Column (Extracted from string if possible, or omit) */}
                     <div className="flex flex-col items-end w-12 shrink-0 py-1">
                       <span className="font-label-medium text-label-medium text-primary text-right">{course.room?.split(' ')[1] || '-'}</span>
@@ -163,7 +179,7 @@ export default function Dashboard() {
                         </div>
                         <div className="pt-1">
                           <h3 className="font-h2 text-h2 text-primary leading-snug">{course.name || 'Unknown Course'}</h3>
-                          <p className="font-metadata text-metadata text-status-safe-fg mt-1 text-xs truncate max-w-[150px]">{course.room?.replace(/^[A-Za-z]+\s+\d{2}:\d{2}\s*-\s*\d{2}:\d{2}\s*/, '') || 'Ruang Kelas'}</p>
+                          <p className="font-metadata text-metadata text-status-safe-fg mt-1 text-xs">{course.room?.replace(/^[A-Za-z]+\s+\d{2}:\d{2}\s*-\s*\d{2}:\d{2}\s*/, '') || 'Ruang Kelas'}</p>
                         </div>
                       </div>
                       
@@ -184,7 +200,7 @@ export default function Dashboard() {
                         </button>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })
             )}
@@ -207,7 +223,15 @@ export default function Dashboard() {
               const styles = getUrgencyStyles(urgencyInfo.type);
               
               return (
-                <div className={`${styles.cardBg} rounded-[24px] p-4 flex gap-3 items-start w-full cursor-pointer hover:-translate-y-1 transition-transform`} onClick={() => navigate('/tasks')}>
+                <motion.div 
+                  initial={{ opacity: 0, scale: 0.9 }} 
+                  animate={{ opacity: 1, scale: 1 }} 
+                  transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className={`${styles.cardBg} rounded-[24px] p-4 flex gap-3 items-start w-full cursor-pointer transition-colors`} 
+                  onClick={() => navigate('/tasks')}
+                >
                   <div className="bg-ink-on-dark rounded-[16px] w-16 h-16 flex flex-col items-center justify-center text-on-primary shrink-0">
                     <span className="font-display-numeric text-display-numeric leading-none -mb-1">{getDeadlineDate(nearestTask.deadline).day}</span>
                     <span className="font-metadata text-[10px] tracking-wider uppercase opacity-80 mt-1">{getDeadlineDate(nearestTask.deadline).month}</span>
@@ -227,7 +251,7 @@ export default function Dashboard() {
                       LIHAT TUGAS
                     </button>
                   </div>
-                </div>
+                </motion.div>
               );
             })()
           )}
@@ -301,6 +325,6 @@ export default function Dashboard() {
           onSuccess={() => fetchCourses()}
         />
       )}
-    </div>
+    </motion.div>
   );
 }
