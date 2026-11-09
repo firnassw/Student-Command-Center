@@ -1,5 +1,9 @@
 <div align="center">
 
+<a href="https://github.com/firnassw/Student-Command-Center">
+  <img src="./public/logo-icon.svg" alt="Student Command Center Logo" width="80" height="80" />
+</a>
+
 # Student Command Center
 
 **A modern, mobile-first academic command center designed to eliminate student friction.**
