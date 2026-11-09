@@ -1,466 +1,207 @@
 <div align="center">
 
-# 🎓 Student Command Center
+# Student Command Center
 
-### Your academic life, organized in one place.
+**A modern, mobile-first academic command center designed to eliminate student friction.**
 
-A modern **student command center** for managing schedules, courses, tasks, and campus access — designed with a mobile-first experience.
+Unify class schedules, assignment deadlines, course materials, project tracking, and LMS attendance into one clean, responsive dashboard.
 
-<br>
+<p align="center">
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React 19" />
+  <img src="https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white" alt="Vite" />
+  <img src="https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Supabase-Database%20%26%20Auth-3ECF8E?style=flat-square&logo=supabase&logoColor=white" alt="Supabase" />
+  <img src="https://img.shields.io/badge/License-MIT-blue?style=flat-square" alt="License" />
+</p>
 
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-
-<br>
-
-**[🚀 View Project](#) · [📖 Documentation](#) · [🐛 Report Issue](https://github.com/firnassw/Student-Command-Center/issues)**
-
-</div>
-
----
-
-## ✦ Why SCC?
-
-Students often have to jump between different platforms just to answer simple questions:
-
-> *"What class do I have today?"*  
-> *"Where is my next class?"*  
-> *"When is my assignment due?"*  
-> *"Where do I click to attend?"*
-
-**Student Command Center** brings these everyday academic actions into one place.
-
-```text
-                 ┌──────────────────────────┐
-                 │   🎓 STUDENT COMMAND     │
-                 │         CENTER            │
-                 └────────────┬─────────────┘
-                              │
-          ┌───────────────────┼───────────────────┐
-          ▼                   ▼                   ▼
-     📅 Schedule          ✓ Tasks             📚 Courses
-          │                   │                   │
-          └───────────────────┼───────────────────┘
-                              ▼
-                    🔗 Campus Services
-                              │
-                              ▼
-                       ⚡ Take Action
-```
-
-### The idea is simple:
-
-**Open the app → know what matters → take action.**
-
----
-
-# ✦ Experience
-
-<div align="center">
-
-| 📅 Schedule | ✓ Tasks | 📚 Courses | 🔗 Campus |
-|:---:|:---:|:---:|:---:|
-| Manage your classes | Track deadlines | Organize subjects | Quick access |
-| Today & Weekly | Prioritize work | Course identity | SPADA & more |
+[Quick Start](#getting-started) • [Core Features](#core-features) • [Tech Stack](#tech-stack) • [Database & Security](#database--security) • [Available Scripts](#available-scripts) • [Contributing](#contributing)
 
 </div>
 
 ---
 
-## 📅 Smart Scheduling
+## Overview
 
-Switch between **Today** and **Weekly** views to quickly understand your academic schedule.
+Students regularly jump between disjointed portals just to find out where their next class is, when an assignment is due, or where to log attendance.
 
-```text
-┌─────────────────────────────────────────────┐
-│  Schedule                         This Week │
-├─────────────────────────────────────────────┤
-│                                             │
-│  TODAY                                      │
-│                                             │
-│  08:00 ──── Sistem Basis Data              │
-│             Lab. 3                          │
-│                                             │
-│  10:00 ──── Metode Survei                  │
-│             R. 204                          │
-│                                             │
-│  13:00 ──── Rekayasa Perangkat Lunak       │
-│             Lab. 2                          │
-│                                             │
-└─────────────────────────────────────────────┘
-```
-
-### 🛡️ Collision Detection
-
-Adding a new schedule shouldn't create another problem.
-
-SCC automatically checks whether the new schedule overlaps with an existing class.
-
-```text
-Existing Schedule
-       │
-       ▼
-┌──────────────┐
-│ 08:00–10:00  │
-└──────┬───────┘
-       │
-       │  New Schedule
-       │  09:00–11:00
-       ▼
-┌──────────────┐
-│ ⚠️ CONFLICT  │
-│ Schedule     │
-│ overlaps     │
-└──────────────┘
-       │
-       ▼
-   ❌ BLOCKED
-```
-
-No accidental double booking.
+**Student Command Center (SCC)** acts as a single operational hub for university life. Built with a mobile-first philosophy, it focuses on real-time situational awareness: open the app, immediately know what needs attention next, and take action with minimum taps.
 
 ---
 
-# ✦ Designed for Students
+## Core Features
 
-### 🎨 Dynamic Course Identity
+### Smart Schedule & Conflict Prevention
+- **Today & Weekly Views**: View upcoming lectures organized chronologically with Jakarta timezone (`Asia/Jakarta`) normalization.
+- **Collision Detection**: Built-in validation algorithm blocks overlapping schedule submissions, preventing double-booked time slots before they reach the database.
+- **One-Tap Attendance**: Integrated links directly open campus LMS / SPADA attendance forms without navigating multi-level menus.
 
-Every course receives a deterministic visual identity.
+### Dynamic Urgency Task Tracker
+- **Priority Engine**: Automatically categorizes assignment urgency based on remaining time:
+  - `URGENT`: Due in less than 24 hours
+  - `ATTENTION`: Due in 1 to 3 days
+  - `UPCOMING`: Due within a week
+  - `SAFE`: More than 7 days left
+  - `OVERDUE`: Flagged immediately if deadline passed
+- **Course-Linked Deadlines**: Tasks directly associate with your registered courses for contextual clarity.
 
-The hashing system ensures that:
+### Deterministic Course Theming
+- Every enrolled course is assigned a unique, reproducible pastel palette and icon based on string hashing (`courseTheme.ts`).
+- Guarantees visual consistency across dashboard widgets, task cards, project boards, and schedule timetables.
 
-```text
-Database Systems
-      ↓
-   Hashing
-      ↓
-┌─────────────────┐
-│  🎨 Course ID   │
-│  Color + Icon   │
-└─────────────────┘
-      ↓
-Always consistent
-```
+### Academic Projects & Milestones
+- Break major course deliverables into manageable sub-tasks.
+- Track overall completion percentage with interactive progress bars.
+- Filter projects by completion status and subject.
 
-The same course keeps the same visual identity across the entire application.
+### Lecture Notes & Course Materials
+- Meeting-based note taking (`QuickNote`) linked to specific courses and class dates.
+- Keep relevant lecture handouts, syllabus links, and attachments grouped under each meeting.
 
----
-
-### 📱 Mobile First
-
-SCC is designed around the way students actually use their devices.
-
-```text
-┌─────────────────────┐
-│  Good morning 👋    │
-│                     │
-│  TODAY               │
-│  ┌─────────────────┐│
-│  │ 08:00           ││
-│  │ Database System ││
-│  │ Lab 3           ││
-│  └─────────────────┘│
-│                     │
-│  NEXT                │
-│  Assignment • 2d    │
-│                     │
-├─────────────────────┤
-│  Home Schedule Tasks│
-│  Courses Projects   │
-└─────────────────────┘
-```
-
-Built with:
-
-- Smooth micro-interactions
-- Backdrop blur
-- Touch-friendly controls
-- Responsive layouts
-- Bottom navigation
-- PWA-ready architecture
+### Automated Web Push Notifications
+- Browser push notification integration via Web Push API and service worker (`sw.js`).
+- Background attendance reminders powered by Supabase Edge Functions.
 
 ---
 
-# ✦ Quick Actions
+## Tech Stack
 
-Academic platforms shouldn't feel like a maze.
-
-SCC provides direct access to external campus services.
-
-```text
-             STUDENT COMMAND CENTER
-                       │
-          ┌────────────┼────────────┐
-          ▼            ▼            ▼
-       Schedule      Tasks       Courses
-          │
-          ▼
-     ┌───────────┐
-     │   Absen   │
-     └─────┬─────┘
-           │
-           ▼
-       SPADA / LMS
-```
-
-**One action. One destination. Less friction.**
+| Layer | Technologies |
+| :--- | :--- |
+| **Frontend Framework** | [React 19](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/) |
+| **Build & Tooling** | [Vite 8](https://vitejs.dev/) + [Oxlint](https://oxc.rs/) |
+| **Styling & UI** | [Tailwind CSS](https://tailwindcss.com/) + [Framer Motion](https://www.framer.com/motion/) |
+| **Icons** | [Lucide React](https://lucide.dev/) |
+| **Backend & Auth** | [Supabase](https://supabase.com/) (PostgreSQL + Auth + Edge Functions) |
+| **Date & Time Utilities** | [date-fns](https://date-fns.org/) + `date-fns-tz` (`Asia/Jakarta`) |
+| **Background Alerts** | Web Push API + Service Worker (`sw.js`) |
 
 ---
 
-# ✦ Architecture
+## Database & Security
 
-```text
-                    ┌─────────────────┐
-                    │     Student     │
-                    └────────┬────────┘
-                             │
-                             ▼
-                 ┌──────────────────────┐
-                 │   React Application  │
-                 │      + Vite          │
-                 └──────────┬───────────┘
-                            │
-                ┌───────────┼───────────┐
-                ▼           ▼           ▼
-            Components    Hooks       Services
-                │           │           │
-                └───────────┼───────────┘
-                            ▼
-                    ┌──────────────┐
-                    │   Supabase   │
-                    ├──────────────┤
-                    │ Auth         │
-                    │ PostgreSQL   │
-                    │ RLS          │
-                    └──────┬───────┘
-                           │
-                           ▼
-                     Academic Data
-```
+SCC uses PostgreSQL backed by Supabase with **Row-Level Security (RLS)** applied across all user tables:
+
+- `courses`: Stores subject names, lecturers, room locations, and attendance URLs.
+- `schedules`: Weekly recurring class schedules with day-of-week and time slots.
+- `tasks`: Assignment details, status, and deadline timestamps.
+- `projects` & `project_tasks`: Academic group and individual project tracking.
+- `meetings`, `notes`, `materials`: Lecture session notes and related files.
+- `push_subscriptions`: Registered browser endpoints for VAPID push notifications.
+
+Every query is strictly authenticated. RLS policies enforce that users can only read, insert, update, or delete records matching their authenticated `user_id`.
 
 ---
 
-# ✦ Tech Stack
+## Getting Started
 
-<div align="center">
+### Prerequisites
 
-### Frontend
+- [Node.js](https://nodejs.org/) (v18.0 or higher recommended)
+- [npm](https://www.npmjs.com/) or [pnpm](https://pnpm.io/)
+- A free [Supabase](https://supabase.com/) project
 
-`React 18` · `Vite` · `Tailwind CSS`
-
-### Backend
-
-`Supabase` · `PostgreSQL` · `Supabase Auth`
-
-### Utilities
-
-`date-fns` · `date-fns-tz`
-
-### Architecture
-
-`Responsive` · `PWA-ready` · `Row-Level Security`
-
-</div>
-
----
-
-# ✦ Database
-
-SCC uses a relational PostgreSQL structure.
-
-```text
-┌───────────────────┐
-│      courses      │
-├───────────────────┤
-│ id                │
-│ name              │
-│ room              │
-│ user_id           │
-└─────────┬─────────┘
-          │
-          │ 1 : N
-          ▼
-┌───────────────────┐
-│     schedules     │
-├───────────────────┤
-│ id                │
-│ course_id         │
-│ day_of_week       │
-│ start_time        │
-│ end_time          │
-└───────────────────┘
-```
-
-### Security
-
-Supabase **Row-Level Security (RLS)** ensures users can only access data belonging to their account.
-
----
-
-# ✦ Project Structure
-
-```text
-Student-Command-Center/
-│
-├── 📁 public/
-│
-├── 📁 src/
-│   ├── 📁 components/
-│   ├── 📁 pages/
-│   ├── 📁 services/
-│   ├── 📁 hooks/
-│   ├── 📁 lib/
-│   └── ...
-│
-├── 📄 .env
-├── 📄 package.json
-├── 📄 vite.config.js
-└── 📄 README.md
-```
-
----
-
-# ✦ Getting Started
-
-### 01 — Clone
+### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/firnassw/Student-Command-Center.git
 cd Student-Command-Center
 ```
 
-### 02 — Install
+### 2. Install Dependencies
 
 ```bash
 npm install
 ```
 
-### 03 — Environment
+### 3. Configure Environment Variables
 
-Create `.env`:
+Create a `.env` file in the project root (you can copy `.env.example`):
 
-```env
-VITE_SUPABASE_URL=your_supabase_project_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+```bash
+cp .env.example .env
 ```
 
-> 🔒 Keep your environment variables private.
+Fill in your Supabase configuration:
 
-### 04 — Run
+```env
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+VITE_SUPABASE_ANON_KEY=your-anon-key-here
+```
+
+### 4. Run Locally
+
+Start the Vite development server:
 
 ```bash
 npm run dev
 ```
 
-Then open:
+Visit `http://localhost:5173` in your browser.
+
+---
+
+## Available Scripts
+
+| Command | Description |
+| :--- | :--- |
+| `npm run dev` | Starts the local development server with hot-reload |
+| `npm run build` | Compiles TypeScript and creates optimized production assets |
+| `npm run preview` | Locally previews the production build |
+| `npm run lint` | Runs [oxlint](https://oxc.rs/) for high-speed JavaScript/TypeScript linting |
+
+---
+
+## Project Structure
 
 ```text
-http://localhost:5173
+Student-Command-Center/
+├── public/
+│   ├── assets/              # Static branding and icons
+│   └── sw.js                # Service Worker for push notifications
+├── src/
+│   ├── assets/              # App images and illustrations
+│   ├── components/          # Page views, modals, and reusable UI components
+│   │   ├── Dashboard.tsx    # Main command center dashboard
+│   │   ├── Schedules.tsx    # Class schedule calendar & collision check
+│   │   ├── Tasks.tsx        # Assignment priority tracker
+│   │   ├── Projects.tsx     # Academic milestone & task manager
+│   │   ├── QuickNote.tsx    # Lecture notes & meeting materials
+│   │   └── ...
+│   ├── hooks/               # Custom data hooks (useSupabaseData, usePushSubscription)
+│   ├── lib/                 # Supabase client, time, and push utilities
+│   ├── utils/               # Urgency calculator and course theme hashing
+│   ├── App.tsx              # Root application router and auth guard
+│   └── main.jsx             # React entrypoint
+├── supabase/
+│   └── functions/           # Supabase Edge Functions (e.g. check-attendance)
+├── tailwind.config.js       # Tailwind CSS theme configuration
+├── vite.config.js           # Vite configuration
+└── package.json
 ```
 
 ---
 
-# ✦ Roadmap
+## Contributing
 
-```text
-                CURRENT
-                   │
-                   ▼
-        ┌───────────────────┐
-        │ 📅 Smart Schedule │
-        │ 🛡️ Collision Check│
-        │ 🎨 Course Identity │
-        │ 🔗 Quick Actions   │
-        │ 🔒 Supabase Auth   │
-        └─────────┬─────────┘
-                  │
-                  ▼
-             NEXT PHASE
-                  │
-        ┌─────────┴─────────┐
-        │                   │
-        ▼                   ▼
-   📋 Task System       🔔 Notifications
-        │                   │
-        └─────────┬─────────┘
-                  ▼
-             FUTURE
-                  │
-        ┌─────────┴─────────┐
-        ▼                   ▼
-   📱 PWA Support      📚 Materials
-        │                   │
-        └─────────┬─────────┘
-                  ▼
-             🚀 MORE
-```
+Contributions, feedback, and issue reports are always welcome.
 
-- [x] Smart schedule
-- [x] Today / Weekly view
-- [x] Schedule collision detection
-- [x] Dynamic course theming
-- [x] Supabase authentication
-- [x] RLS database security
-- [x] External campus quick actions
-- [ ] Assignment management
-- [ ] Task prioritization
-- [ ] Push notifications
-- [ ] PWA installation
-- [ ] Offline support
-- [ ] Course materials
-- [ ] Project management
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ---
 
-# ✦ Design Philosophy
+## License
 
-> **Academic tools should reduce friction, not add to it.**
-
-SCC follows five principles:
-
-| Principle | Meaning |
-|---|---|
-| **Clarity** | Know what matters immediately |
-| **Speed** | Common actions take fewer steps |
-| **Consistency** | Information looks predictable |
-| **Mobile First** | Designed for everyday phone usage |
-| **Less Friction** | Reduce unnecessary platform switching |
+This project is licensed under the [MIT License](LICENSE).
 
 ---
-
-# ✦ Contributing
-
-Ideas, improvements, issues, and feature requests are welcome.
-
-If you think SCC could be better, feel free to open an issue or submit a pull request.
 
 <div align="center">
 
-**[Open an Issue →](https://github.com/firnassw/Student-Command-Center/issues)**
-
-</div>
-
----
-
-# 📄 License
-
-This project is licensed under the **MIT License**.
-
-<br>
-
-<div align="center">
-
-## 🎓 Student Command Center
-
-**Plan less. Know more. Get things done.**
-
-<br>
-
-Made with ☕ and code by **Wahid Firnas**
-
-[GitHub](https://github.com/firnassw)
+Crafted with care by **[Wahid Firnas](https://github.com/firnassw)**
 
 </div>
